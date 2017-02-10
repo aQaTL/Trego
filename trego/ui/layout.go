@@ -6,21 +6,47 @@ import (
 )
 
 const (
-	SHORTCUTS string = "shortcuts"
+	BOTTOM_BAR string = "botbar"
+	TOP_BAR string = "topbar"
 )
 
 func Layout(gui *Gui) error {
-	if err := shortcutsView(gui); err != nil {
+	if err := bottomBar(gui); err != nil {
 		return  err
+	}
+	if err := topBar(gui); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func topBar(gui *Gui) error {
+	maxX, _ := gui.Size()
+	if v, err := gui.SetView(TOP_BAR, 0, 0, maxX - 1, 2); err != nil {
+		if err != ErrUnknownView {
+			return err
+		}
+
+		v.Editable = false
+		v.Highlight = false
+		v.BgColor = ColorBlack
+
+		color.Output = v
+		color.New(color.FgYellow).Add(color.Bold).Printf("Board: %v", "Trego")
+
+		if _, err := gui.SetCurrentView(BOTTOM_BAR); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 //bottom bar with shortcuts
-func shortcutsView(gui *Gui) error {
+func bottomBar(gui *Gui) error {
 	maxX, maxY := gui.Size()
-	if v, err := gui.SetView(SHORTCUTS, 0, maxY - 4, maxX - 1, maxY - 1); err != nil {
+	if v, err := gui.SetView(BOTTOM_BAR, 0, maxY - 4, maxX - 1, maxY - 1); err != nil {
 		if err != ErrUnknownView {
 			return err
 		}
@@ -32,7 +58,7 @@ func shortcutsView(gui *Gui) error {
 		color.Output = v
 		color.New(color.FgYellow).Add(color.Bold).Println("Ala nie ma kota")
 
-		if _, err := gui.SetCurrentView(SHORTCUTS); err != nil {
+		if _, err := gui.SetCurrentView(BOTTOM_BAR); err != nil {
 			return err
 		}
 	}
