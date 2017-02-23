@@ -4,6 +4,8 @@ import (
 	. "github.com/jroimartin/gocui"
 	"github.com/fatih/color"
 	"math"
+	"github.com/VojtechVitek/go-trello"
+	"strings"
 )
 
 const (
@@ -12,18 +14,7 @@ const (
 	LIST_WIDTH int = 24
 )
 
-type List struct {
-	Name  string
-	Cards []Card
-}
-
-type Card struct {
-	Name string
-}
-
-var listCounter int
-
-func Layout(gui *Gui) error {
+func (manager *TregoManager) Layout(gui *Gui) error {
 	if err := bottomBar(gui); err != nil {
 		return err
 	}
@@ -31,30 +22,91 @@ func Layout(gui *Gui) error {
 		return err
 	}
 
+	for idx, list := range (manager.Lists) {
+		if err := AddList(gui, list, idx); err != nil {
+			return err
+		} else {
+			if manager.currentView == nil {
+				view, _ := gui.View(list.Name)
+				manager.currentView = view
+			}
+		}
+	}
+
+	if _, err := gui.SetCurrentView(manager.currentView.Name()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func AddList(gui *Gui, list List) error {
+func SetKeyBindings(gui *Gui, manager *TregoManager) error {
+	if err := gui.SetKeybinding("", KeyCtrlC, ModNone, quit); err != nil {
+		return err
+	}
+
+	//Keybinding for switching list on tab keypress
+	//I used anonymous function for manager variable access
+	if err := gui.SetKeybinding("", KeyTab, ModNone, func(gui *Gui, v *View) error {
+		for idx, list := range (manager.Lists) {
+			if list.Name == manager.currentView.Name() {
+				view, err := gui.SetCurrentView(manager.Lists[(idx + 1) % len(manager.Lists)].Name)
+				if err != nil {
+					return err
+				}
+				manager.currentView = view
+				if _, err := gui.SetViewOnTop(view.Name()); err != nil {
+					return err
+				}
+				break
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	for _, list := range (manager.Lists) {
+		if err := gui.SetKeybinding(list.Name, KeyArrowUp, ModNone, listUp); err != nil {
+			return err
+		}
+		if err := gui.SetKeybinding(list.Name, KeyArrowDown, ModNone, listDown); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func AddList(gui *Gui, list trello.List, index int) error {
 	_, maxY := gui.Size()
 	if v, err := gui.SetView(list.Name,
-		listCounter * LIST_WIDTH + int(math.Abs(sign(listCounter))), 3,
-		listCounter * LIST_WIDTH + LIST_WIDTH, maxY - 5);
-			err != nil && err == ErrUnknownView {
+		index * LIST_WIDTH + int(math.Abs(sign(index))), 3,
+		index * LIST_WIDTH + LIST_WIDTH, maxY - 5);
+			err != nil {
 
-		listCounter++
+		if err != ErrUnknownView {
+			return err
+		}
+
 		v.Editable = false
 		v.Highlight = true
 		v.Wrap = true
 		v.BgColor = ColorBlack
+		v.SelBgColor = ColorGreen
+		v.SelFgColor = ColorBlack
 		v.Title = list.Name
+		gui.Cursor = true
 
 		color.Output = v
 
-		for idx, card := range (list.Cards) {
+		cards, err := list.Cards()
+		if err != nil {
+			return err
+		}
+		for idx, card := range (cards) {
 			color.New(color.BgBlack).Add(color.FgWhite).Printf("%d. %v\n", idx, card.Name)
 		}
-	} else {
-		return err
 	}
 
 	return nil
@@ -100,11 +152,34 @@ func bottomBar(gui *Gui) error {
 	return nil
 }
 
-func SetKeyBindings(gui *Gui) error {
-	if err := gui.SetKeybinding("", KeyCtrlC, ModNone, quit); err != nil {
-		return err
+func listUp(g *Gui, v *View) error {
+	if v != nil {
+		cx, cy := v.Cursor()
+		ox, oy := v.Origin()
+		if cy > 0 {
+			if err := v.SetCursor(cx, cy - 1); err != nil && oy > 0 {
+				if err := v.SetOrigin(ox, oy - 1); err != nil {
+					return nil
+				}
+			}
+		}
 	}
 
+	return nil
+}
+
+func listDown(g *Gui, v *View) error {
+	if v != nil {
+		cx, cy := v.Cursor()
+		if cy < len(strings.Split(v.Buffer(), "\n")) {
+			if err := v.SetCursor(cx, cy + 1); err != nil {
+				ox, oy := v.Origin()
+				if err := v.SetOrigin(ox, oy + 1); err != nil {
+					return nil
+				}
+			}
+		}
+	}
 	return nil
 }
 
