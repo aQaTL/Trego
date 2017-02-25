@@ -1,16 +1,13 @@
 package ui
 
 import (
-
-)
-import (
 	"github.com/VojtechVitek/go-trello"
 	"github.com/jroimartin/gocui"
 	"log"
 )
 
 type TregoManager struct {
-	Lists []trello.List
+	Lists       []trello.List
 	currentView *gocui.View
 }
 

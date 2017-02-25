@@ -43,11 +43,10 @@ func GetBoard(member *Member, boardName string) *Board {
 	if err != nil {
 		log.Panicln(err)
 	}
-	var searchedBoard *Board
 	for _, board := range (boards) {
 		if board.Name == boardName {
-			searchedBoard = &board
+			return &board
 		}
 	}
-	return searchedBoard
+	return nil
 }

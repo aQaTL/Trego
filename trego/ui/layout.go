@@ -25,12 +25,11 @@ func (manager *TregoManager) Layout(gui *Gui) error {
 	for idx, list := range (manager.Lists) {
 		if err := AddList(gui, list, idx); err != nil {
 			return err
-		} else {
-			if manager.currentView == nil {
-				view, _ := gui.View(list.Name)
-				manager.currentView = view
-			}
 		}
+	}
+
+	if manager.currentView == nil && len(manager.Lists) > 0 {
+		manager.selectList(gui, manager.Lists[0].Name)
 	}
 
 	if _, err := gui.SetCurrentView(manager.currentView.Name()); err != nil {
@@ -145,9 +144,6 @@ func bottomBar(gui *Gui) error {
 		color.Output = v
 		color.New(color.FgYellow).Add(color.Bold).Println("Ala nie ma kota")
 
-		if _, err := gui.SetCurrentView(BOTTOM_BAR); err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -157,10 +153,13 @@ func listUp(g *Gui, v *View) error {
 		cx, cy := v.Cursor()
 		ox, oy := v.Origin()
 		if cy > 0 {
-			if err := v.SetCursor(cx, cy - 1); err != nil && oy > 0 {
-				if err := v.SetOrigin(ox, oy - 1); err != nil {
-					return nil
-				}
+			if err := v.SetCursor(cx, cy - 1); err != nil {
+				return err
+			}
+		}
+		if oy > 0 && cy == 0 {
+			if err := v.SetOrigin(ox, oy - 1); err != nil {
+				return err
 			}
 		}
 	}
@@ -171,9 +170,9 @@ func listUp(g *Gui, v *View) error {
 func listDown(g *Gui, v *View) error {
 	if v != nil {
 		cx, cy := v.Cursor()
-		if cy < len(strings.Split(v.Buffer(), "\n")) {
+		ox, oy := v.Origin()
+		if cy + oy < (len(strings.Split(v.ViewBuffer(), "\n")) - 3) {
 			if err := v.SetCursor(cx, cy + 1); err != nil {
-				ox, oy := v.Origin()
 				if err := v.SetOrigin(ox, oy + 1); err != nil {
 					return nil
 				}
