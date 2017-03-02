@@ -3,8 +3,8 @@ package main
 import (
 	. "github.com/jroimartin/gocui"
 	"log"
-	"github.com/aqatl/Trego/trego/ui"
-	"github.com/aqatl/Trego/trego/conn"
+	"github.com/aqatl/Trego/trello"
+	"github.com/aqatl/Trego/ui"
 )
 
 func main() {
