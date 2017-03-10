@@ -8,14 +8,15 @@ import (
 )
 
 func main() {
-	user := conn.Connect()
-	lists := conn.Lists(conn.BoardByName(user, "Trego"))
-
 	gui, err := NewGui(OutputNormal)
 	if err != nil {
 		log.Panicln(err)
 	}
 	defer gui.Close()
+
+	user := conn.Connect(gui)
+	lists := conn.Lists(conn.BoardByName(user, "Trego"))
+
 
 	gui.Mouse = false
 	gui.Highlight = true

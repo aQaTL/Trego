@@ -7,9 +7,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"github.com/jroimartin/gocui"
 )
 
-func Connect() *Member {
+func Connect(gui *gocui.Gui) *Member {
 	jsonData, err := ioutil.ReadFile("token.json")
 	if err != nil {
 		log.Panicln(err)

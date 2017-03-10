@@ -70,7 +70,7 @@ func AddList(gui *Gui, list trello.List, index int) error {
 			return err
 		}
 		for idx, card := range (cards) {
-			color.New(color.BgBlack).Add(color.FgWhite).Printf("%d. %v\n", idx, card.Name)
+			color.New(color.BgBlack).Add(color.FgWhite).Printf("%d.%v\n", idx, card.Name)
 		}
 	}
 
@@ -108,7 +108,11 @@ func bottomBarLayout(gui *Gui) error {
 		v.BgColor = ColorBlack
 
 		color.Output = v
-		color.New(color.FgYellow).Add(color.Bold).Println("Ala nie ma kota")
+		color := color.New(color.FgYellow).Add(color.Bold)
+		color.Printf("%-22s", "\xE2\x87\x84 move between lists")
+		color.Printf("%s\n", "^C exit")
+		color.Printf("%-22s", "\xE2\x87\x85 move inside list")
+		color.Printf("%s\n", "b change board")
 
 	}
 	return nil
