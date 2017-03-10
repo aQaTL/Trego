@@ -3,13 +3,13 @@ package main
 import (
 	. "github.com/jroimartin/gocui"
 	"log"
-	"github.com/aqatl/Trego/trello"
+	"github.com/aqatl/Trego/conn"
 	"github.com/aqatl/Trego/ui"
 )
 
 func main() {
 	user := conn.Connect()
-	lists := conn.GetLists(conn.GetBoard(user, "Trego"))
+	lists := conn.Lists(conn.BoardByName(user, "Trego"))
 
 	gui, err := NewGui(OutputNormal)
 	if err != nil {
@@ -18,7 +18,9 @@ func main() {
 	defer gui.Close()
 
 	gui.Mouse = false
-	manager := &ui.TregoManager{Lists: lists}
+	gui.Highlight = true
+	gui.SelFgColor = ColorGreen
+	manager := &ui.TregoManager{Member: user, Lists: lists}
 	gui.SetManager(manager)
 
 	ui.SetKeyBindings(gui, manager)

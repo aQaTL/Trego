@@ -10,33 +10,36 @@ import (
 const (
 	BOTTOM_BAR string = "botbar"
 	TOP_BAR string = "topbar"
+	BOARD_SELECT string = "boardselectview"
 	LIST_WIDTH int = 24
 )
 
-func (manager *TregoManager) Layout(gui *Gui) error {
-	if err := bottomBarLayout(gui); err != nil {
-		return err
+func (manager *TregoManager) Layout(gui *Gui) (err error) {
+	if err = bottomBarLayout(gui); err != nil {
+		return
 	}
-	if err := topBarLayout(gui); err != nil {
-		return err
+	if err = topBarLayout(gui); err != nil {
+		return
 	}
 
 	//loops through user's trello lists and adds them to gui
 	for idx, list := range (manager.Lists) {
-		if err := AddList(gui, list, idx); err != nil {
-			return err
+		if err = AddList(gui, list, idx); err != nil {
+			return
 		}
 	}
 
 	if manager.currentView == nil && len(manager.Lists) > 0 {
-		manager.selectList(gui, manager.Lists[0].Name)
+		if err = manager.SelectList(gui, manager.Lists[0].Name); err != nil {
+			return
+		}
 	}
 
-	if _, err := gui.SetCurrentView(manager.currentView.Name()); err != nil {
-		return err
+	if _, err = gui.SetCurrentView(manager.currentView.Name()); err != nil {
+		return
 	}
 
-	return nil
+	return
 }
 
 func AddList(gui *Gui, list trello.List, index int) error {
@@ -56,6 +59,7 @@ func AddList(gui *Gui, list trello.List, index int) error {
 		v.BgColor = ColorBlack
 		v.SelBgColor = ColorGreen
 		v.SelFgColor = ColorBlack
+		v.FgColor = ColorWhite
 		v.Title = list.Name
 		gui.Cursor = true
 

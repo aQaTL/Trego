@@ -1,3 +1,5 @@
+// Package for connecting with Trello
+
 package conn
 
 import (
@@ -30,7 +32,7 @@ func Connect() *Member {
 	return usr
 }
 
-func GetLists(board *Board) []List {
+func Lists(board *Board) []List {
 	lists, err := board.Lists()
 	if err != nil {
 		log.Panicln(err)
@@ -38,7 +40,7 @@ func GetLists(board *Board) []List {
 	return lists
 }
 
-func GetBoard(member *Member, boardName string) *Board {
+func BoardByName(member *Member, boardName string) *Board {
 	boards, err := member.Boards()
 	if err != nil {
 		log.Panicln(err)
