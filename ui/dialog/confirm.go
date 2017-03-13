@@ -17,7 +17,7 @@ const (
 func ConfirmDialog(msg, title string, gui *gocui.Gui, choice chan bool) (view *gocui.View) {
 	wi, hi := gui.Size()
 	w, h := float64(wi), float64(hi)
-	x1 := int(float64(w) / 2.0 * 0.7)
+	x1 := int(w / 2.0 * 0.7)
 	x2 := int(w / 2 * 1.3)
 	y1 := int(h / 2 * 0.8)
 
