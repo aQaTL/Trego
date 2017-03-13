@@ -2,10 +2,35 @@ package ui
 
 import (
 	. "github.com/jroimartin/gocui"
+	"github.com/aqatl/Trego/ui/dialog"
+	"log"
+	"io/ioutil"
+	"strconv"
 )
 
 func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
 	if err = gui.SetKeybinding("", KeyCtrlC, ModNone, quit); err != nil {
+		return
+	}
+
+	//Testing code, not meat to be used
+	if err = gui.SetKeybinding("", 'p', ModNone, func(gui *Gui, v *View) error {
+		choice := make(chan bool)
+		manager.SelectView(gui, dialog.ConfirmDialog("Are you sure? [y/n]", "", gui, choice).Name())
+		go func() {
+			dialChoice := <-choice
+			manager.currentView = nil
+			//test, if choice is being registered correctly
+			e := ioutil.WriteFile(
+				"choice.txt",
+				[]byte(strconv.FormatBool(dialChoice)),
+				644)
+			if e != nil {
+				log.Panicln(e, "!@#")
+			}
+		}()
+		return nil
+	}); err != nil {
 		return
 	}
 
@@ -30,7 +55,7 @@ func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err er
 	switchListRight := func(gui *Gui, v *View) (err error) {
 		for idx, list := range (mngr.Lists) {
 			if list.Name == mngr.currentView.Name() {
-				err = mngr.SelectList(gui, mngr.Lists[(idx + 1) % len(mngr.Lists)].Name)
+				err = mngr.SelectView(gui, mngr.Lists[(idx + 1) % len(mngr.Lists)].Name)
 				break
 			}
 		}
@@ -42,7 +67,7 @@ func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err er
 				if idx == 0 {
 					idx = len(mngr.Lists)
 				}
-				err = mngr.SelectList(gui, mngr.Lists[(idx - 1) % len(mngr.Lists)].Name)
+				err = mngr.SelectView(gui, mngr.Lists[(idx - 1) % len(mngr.Lists)].Name)
 				break
 			}
 		}

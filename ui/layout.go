@@ -30,7 +30,7 @@ func (manager *TregoManager) Layout(gui *Gui) (err error) {
 	}
 
 	if manager.currentView == nil && len(manager.Lists) > 0 {
-		if err = manager.SelectList(gui, manager.Lists[0].Name); err != nil {
+		if err = manager.SelectView(gui, manager.Lists[0].Name); err != nil {
 			return
 		}
 	}

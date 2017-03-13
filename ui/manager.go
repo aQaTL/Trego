@@ -11,8 +11,8 @@ type TregoManager struct {
 	currentView *gocui.View
 }
 
-func (manager *TregoManager) SelectList(gui *gocui.Gui, listName string) (err error) {
-	if view, err := gui.SetCurrentView(listName); err == nil {
+func (manager *TregoManager) SelectView(gui *gocui.Gui, viewName string) (err error) {
+	if view, err := gui.SetCurrentView(viewName); err == nil {
 		manager.currentView = view
 		_, err = gui.SetViewOnTop(view.Name())
 	}
