@@ -4,8 +4,6 @@ import (
 	. "github.com/jroimartin/gocui"
 	"github.com/aqatl/Trego/ui/dialog"
 	"log"
-	"io/ioutil"
-	"strconv"
 )
 
 func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
@@ -13,21 +11,45 @@ func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
 		return
 	}
 
-	//Testing code, not meat to be used
-	if err = gui.SetKeybinding("", 'p', ModNone, func(gui *Gui, v *View) error {
-		choice := make(chan bool)
-		manager.SelectView(gui, dialog.ConfirmDialog("Are you sure? [y/n]", "", gui, choice).Name())
+	////Testing code, not meant to be used
+	//if err = gui.SetKeybinding("", KeyCtrlP, ModNone, func(gui *Gui, v *View) error {
+	//	input := make(chan string)
+	//	manager.SelectView(gui, dialog.InputDialog("Are you sure? [y/n]", "", "", gui, input).Name())
+	//	go func() {
+	//		userInput := <-input
+	//		manager.currentView = nil
+	//		//test, if choice is being registered correctly
+	//		//e := ioutil.WriteFile(
+	//		//	"choice.txt",
+	//		//	[]byte(userInput),
+	//		//	644)
+	//		fmt.Fprint(os.Stderr, userInput)
+	//		//if e != nil {
+	//		//	log.Panicln(e, "!@#")
+	//		//}
+	//	}()
+	//	return nil
+	//}); err != nil {
+	//	return
+	//}
+
+	//Testing testing testing
+	if err = gui.SetKeybinding("", KeyCtrlP, ModNone, func(gui *Gui, v *View) error {
+		option := make(chan bool)
+		currView := gui.CurrentView()
+		manager.SelectView(gui, dialog.ConfirmDialog("message", "title", gui, option).Name())
+
 		go func() {
-			dialChoice := <-choice
-			manager.currentView = nil
-			//test, if choice is being registered correctly
-			e := ioutil.WriteFile(
-				"choice.txt",
-				[]byte(strconv.FormatBool(dialChoice)),
-				644)
-			if e != nil {
-				log.Panicln(e, "!@#")
-			}
+			_ = <-option
+			manager.currentView = currView
+
+			gui.Execute(func(gui *Gui) error {
+				if err := manager.SelectView(gui, manager.currentView.Name());
+						err != nil {
+					log.Panicln(err)
+				}
+				return nil
+			})
 		}()
 		return nil
 	}); err != nil {
@@ -47,7 +69,6 @@ func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
 	}
 	return
 }
-
 
 //Keybinding for switching list on tab keypress
 //I used anonymous function for manager variable access

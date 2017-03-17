@@ -5,6 +5,7 @@ import (
 	"github.com/fatih/color"
 	"math"
 	"github.com/VojtechVitek/go-trello"
+	"log"
 )
 
 const (
@@ -14,32 +15,37 @@ const (
 	LIST_WIDTH int = 24
 )
 
-func (manager *TregoManager) Layout(gui *Gui) (err error) {
-	if err = bottomBarLayout(gui); err != nil {
-		return
+func (manager *TregoManager) Layout(gui *Gui) error {
+	if err := bottomBarLayout(gui); err != nil {
+		return err
 	}
-	if err = topBarLayout(gui); err != nil {
-		return
+	if err := topBarLayout(gui); err != nil {
+		return err
 	}
 
 	//loops through user's trello lists and adds them to gui
 	for idx, list := range (manager.Lists) {
-		if err = AddList(gui, list, idx); err != nil {
-			return
+		if err := AddList(gui, list, idx); err != nil {
+			log.Panicln(err, idx, list.Name, "Add List func err")
 		}
 	}
 
 	if manager.currentView == nil && len(manager.Lists) > 0 {
-		if err = manager.SelectView(gui, manager.Lists[0].Name); err != nil {
-			return
+		if err := manager.SelectView(gui, manager.Lists[0].Name); err != nil {
+			log.Panicln(err, len(manager.Lists), manager.Lists[0].Name, "SelectView")
 		}
 	}
 
-	if _, err = gui.SetCurrentView(manager.currentView.Name()); err != nil {
-		return
+	if _, err := gui.SetCurrentView(manager.currentView.Name()); err != nil {
+		saveMyAssView, err := gui.SetCurrentView(manager.Lists[0].Name)
+		if err != nil {
+			log.Panicln(err, "this is tragic", gui.CurrentView().Name())
+		}
+		manager.currentView = saveMyAssView
+		return nil
 	}
 
-	return
+	return nil
 }
 
 func AddList(gui *Gui, list trello.List, index int) error {
