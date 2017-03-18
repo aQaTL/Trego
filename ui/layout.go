@@ -6,6 +6,7 @@ import (
 	"math"
 	"github.com/VojtechVitek/go-trello"
 	"log"
+	"github.com/aqatl/Trego/utils"
 )
 
 const (
@@ -30,9 +31,11 @@ func (manager *TregoManager) Layout(gui *Gui) error {
 		}
 	}
 
-	if manager.currentView == nil && len(manager.Lists) > 0 {
-		if err := manager.SelectView(gui, manager.Lists[0].Name); err != nil {
-			log.Panicln(err, len(manager.Lists), manager.Lists[0].Name, "SelectView")
+	if manager.currentView == nil {
+		if len(manager.Lists) > 0 {
+			utils.ErrCheck(manager.SelectView(gui, manager.Lists[0].Name))
+		} else {
+			utils.ErrCheck(manager.SelectView(gui, TOP_BAR))
 		}
 	}
 
