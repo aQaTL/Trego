@@ -3,7 +3,7 @@ package ui
 import (
 	. "github.com/jroimartin/gocui"
 	"github.com/aqatl/Trego/ui/dialog"
-	"log"
+	"github.com/aqatl/Trego/utils"
 )
 
 func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
@@ -37,17 +37,17 @@ func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
 	if err = gui.SetKeybinding("", KeyCtrlP, ModNone, func(gui *Gui, v *View) error {
 		option := make(chan bool)
 		currView := gui.CurrentView()
-		manager.SelectView(gui, dialog.ConfirmDialog("message", "title", gui, option).Name())
+		utils.ErrCheck(
+			manager.SelectView(
+				gui,
+				dialog.ConfirmDialog("message", "title", gui, option).Name()))
 
 		go func() {
 			_ = <-option
 			manager.currentView = currView
 
 			gui.Execute(func(gui *Gui) error {
-				if err := manager.SelectView(gui, manager.currentView.Name());
-						err != nil {
-					log.Panicln(err)
-				}
+				utils.ErrCheck(manager.SelectView(gui, manager.currentView.Name()))
 				return nil
 			})
 		}()
