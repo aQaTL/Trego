@@ -140,6 +140,7 @@ func printCentered(w io.Writer, text string, viewWidth int) {
 		}
 }
 
+//TODO refactor dialogs to get rid of code duplication
 func setUpDialogView(gui *gocui.Gui, viewname string, x1, y1, x2, y2 int, title string) (view *gocui.View, err error) {
 	if view, err = gui.SetView(viewname, x1, y1, x2, y2); err != nil {
 		if err != gocui.ErrUnknownView {

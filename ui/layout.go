@@ -5,7 +5,6 @@ import (
 	"github.com/fatih/color"
 	"math"
 	"github.com/VojtechVitek/go-trello"
-	"log"
 	"github.com/aqatl/Trego/utils"
 )
 
@@ -26,25 +25,15 @@ func (manager *TregoManager) Layout(gui *Gui) error {
 
 	//loops through user's trello lists and adds them to gui
 	for idx, list := range (manager.Lists) {
-		if err := AddList(gui, list, idx); err != nil {
-			log.Panicln(err, idx, list.Name, "Add List func err")
-		}
+		utils.ErrCheck(AddList(gui, list, idx))
 	}
 
-	if manager.currentView == nil {
-		if len(manager.Lists) > 0 {
-			utils.ErrCheck(manager.SelectView(gui, manager.Lists[0].Name))
-		} else {
-			utils.ErrCheck(manager.SelectView(gui, TOP_BAR))
-		}
-	}
+	manager.CheckCurrView(gui, TOP_BAR)
 
 	if _, err := gui.SetCurrentView(manager.currentView.Name()); err != nil {
-		saveMyAssView, err := gui.SetCurrentView(manager.Lists[0].Name)
-		if err != nil {
-			log.Panicln(err, "this is tragic", gui.CurrentView().Name())
-		}
-		manager.currentView = saveMyAssView
+		manager.currentView = nil
+		manager.CheckCurrView(gui, TOP_BAR)
+		utils.ErrCheck(manager.SelectView(gui, manager.currentView.Name()))
 		return nil
 	}
 
