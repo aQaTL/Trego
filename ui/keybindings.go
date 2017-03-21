@@ -37,6 +37,7 @@ func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
 	if err = gui.SetKeybinding("", KeyCtrlP, ModNone, func(gui *Gui, v *View) error {
 		option := make(chan bool)
 		currView := gui.CurrentView()
+		gui.DeleteKeybindings("") //Prevents nested dialogs
 		utils.ErrCheck(
 			manager.SelectView(
 				gui,
@@ -48,6 +49,7 @@ func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
 
 			gui.Execute(func(gui *Gui) error {
 				utils.ErrCheck(manager.SelectView(gui, manager.currentView.Name()))
+				SetKeyBindings(gui, manager)
 				return nil
 			})
 		}()

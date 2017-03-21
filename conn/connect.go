@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"github.com/jroimartin/gocui"
+	"github.com/aqatl/Trego/utils"
 )
 
 func Connect(gui *gocui.Gui) *Member {
@@ -17,10 +18,7 @@ func Connect(gui *gocui.Gui) *Member {
 	}
 
 	var credentials struct{ AppKey, Token string }
-	err = json.Unmarshal(jsonData, &credentials)
-	if err != nil {
-		log.Panicln(err)
-	}
+	utils.ErrCheck(json.Unmarshal(jsonData, &credentials))
 
 	client, err := NewAuthClient(credentials.AppKey, &credentials.Token)
 	if err != nil {
