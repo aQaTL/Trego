@@ -16,7 +16,7 @@ func Connect(gui *gocui.Gui) *Member {
 		log.Panicln(err)
 	}
 
-	var credentials struct{ AppKey, Token, Nick string }
+	var credentials struct{ AppKey, Token string }
 	err = json.Unmarshal(jsonData, &credentials)
 	if err != nil {
 		log.Panicln(err)
@@ -26,7 +26,7 @@ func Connect(gui *gocui.Gui) *Member {
 	if err != nil {
 		log.Panicln(err)
 	}
-	usr, err := client.Member(credentials.Nick)
+	usr, err := client.Member("me")
 	if err != nil {
 		log.Panicln(err)
 	}
