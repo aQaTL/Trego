@@ -30,10 +30,10 @@ func (manager *TregoManager) Layout(gui *Gui) error {
 
 	manager.CheckCurrView(gui, TOP_BAR)
 
-	if _, err := gui.SetCurrentView(manager.currentView.Name()); err != nil {
-		manager.currentView = nil
+	if _, err := gui.SetCurrentView(manager.currView.Name()); err != nil {
+		manager.currView = nil
 		manager.CheckCurrView(gui, TOP_BAR)
-		utils.ErrCheck(manager.SelectView(gui, manager.currentView.Name()))
+		utils.ErrCheck(manager.SelectView(gui, manager.currView.Name()))
 		return nil
 	}
 

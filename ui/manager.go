@@ -9,12 +9,13 @@ import (
 type TregoManager struct {
 	Member      *trello.Member
 	Lists       []trello.List
-	currentView *gocui.View
+	currListIdx int
+	currView    *gocui.View
 }
 
 func (manager *TregoManager) SelectView(gui *gocui.Gui, viewName string) error {
 	if view, err := gui.SetCurrentView(viewName); err == nil {
-		manager.currentView = view
+		manager.currView = view
 		_, err = gui.SetViewOnTop(view.Name())
 		return err
 	} else {
@@ -23,7 +24,7 @@ func (manager *TregoManager) SelectView(gui *gocui.Gui, viewName string) error {
 }
 
 func (manager *TregoManager) CheckCurrView(gui *gocui.Gui, replacementViewName string) {
-	if manager.currentView == nil {
+	if manager.currView == nil {
 		if len(manager.Lists) > 0 {
 			utils.ErrCheck(manager.SelectView(gui, manager.Lists[0].Name))
 		} else {

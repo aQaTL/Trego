@@ -16,7 +16,7 @@ const (
 	INPUT_FIELD = "inputdialogfield"
 )
 
-func calculateDialogValues(msgL int, gui *gocui.Gui) (x1, y1, x2, y2 int) {
+func calcDialogBounds(msgL int, gui *gocui.Gui) (x1, y1, x2, y2 int) {
 	wi, hi := gui.Size()
 	w, h := float64(wi), float64(hi)
 	x1 = int(w / 2.0 * 0.7)
@@ -31,25 +31,15 @@ func calculateDialogValues(msgL int, gui *gocui.Gui) (x1, y1, x2, y2 int) {
 //to handle it properly. If you don't, it may cause Unknown view error
 func ConfirmDialog(msg, title string, gui *gocui.Gui, choice chan bool) (view *gocui.View) {
 	msgL := len(msg)
-	x1, y1, x2, y2 := calculateDialogValues(msgL, gui)
+	x1, y1, x2, y2 := calcDialogBounds(msgL, gui)
 	winW := x2 - x1
 	currView := gui.CurrentView()
 
-	if v, err := gui.SetView(CONFIRM_DIALOG, x1, y1, x2, y2); err != nil {
-		if err != gocui.ErrUnknownView {
-			log.Panicln(err)
-		}
-
-		v.Wrap = true
-		v.FgColor = gocui.ColorBlack
-		v.BgColor = gocui.ColorGreen
-		v.Highlight = false
-
-		v.Title = title
-
-		printCentered(v, msg, winW)
-		view = v
-	}
+	confirmView, err := setUpDialogView(gui, CONFIRM_DIALOG, title, x1, y1, x2, y2)
+	utils.ErrCheck(err)
+	confirmView.Highlight = false
+	printCentered(confirmView, msg, winW)
+	view = confirmView
 
 	if err := gui.SetKeybinding(CONFIRM_DIALOG, 'y', gocui.ModNone,
 		func(gui *gocui.Gui, view *gocui.View) (err error) {
@@ -84,51 +74,31 @@ func dialogCleanUp(gui *gocui.Gui, previousView *gocui.View, dialogTypes ...stri
 
 func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string) *gocui.View {
 	msgL := len(msg)
-	x1, y1, x2, y2 := calculateDialogValues(msgL, gui)
+	x1, y1, x2, y2 := calcDialogBounds(msgL, gui)
 	currView := gui.CurrentView()
 
-	dialogView, err := gui.SetView(INPUT_DIALOG, x1, y1, x2, y2)
-	if err != nil {
-		if err != gocui.ErrUnknownView {
-			log.Panicln(err)
-		}
+	dialogView, err := setUpDialogView(gui, INPUT_DIALOG, title, x1, y1, x2, y2)
+	utils.ErrCheck(err)
+	dialogView.Highlight = false
+	printCentered(dialogView, msg, (x2 - x1))
 
-		dialogView.Wrap = true
-		dialogView.Highlight = false
-		dialogView.FgColor = gocui.ColorBlack
-		dialogView.BgColor = gocui.ColorGreen
+	inputView, err := setUpDialogView(gui, INPUT_FIELD, "", x1, y1 + 3, x2, y2 + 3) //Place it a little lower
+	utils.ErrCheck(err)
+	inputView.Editable = true
+	fmt.Fprint(inputView, initValue)
 
-		dialogView.Title = title
-
-		printCentered(dialogView, msg, (x2 - x1))
-	}
-
-	inputField, err := gui.SetView(INPUT_FIELD, x1, y1 + 3, x2, y2 + 3)
-	if err != nil {
-		if err != gocui.ErrUnknownView {
-			log.Panicln(err)
-		}
-
-		inputField.Highlight = true
-		inputField.Editable = true
-		inputField.Wrap = true
-		inputField.FgColor = gocui.ColorBlack
-		inputField.BgColor = gocui.ColorCyan
-
-		fmt.Fprintf(inputField, "%s", initValue)
-	}
 	gui.SetKeybinding(
 		INPUT_FIELD,
 		gocui.KeyEnter,
 		gocui.ModNone,
 		func(gui *gocui.Gui, view *gocui.View) error {
 			dialogCleanUp(gui, currView, INPUT_DIALOG, INPUT_FIELD)
-			input <- inputField.Buffer()
+			input <- inputView.Buffer()
 			close(input)
 			return err
 	})
 
-	return inputField
+	return inputView
 }
 
 func printCentered(w io.Writer, text string, viewWidth int) {
@@ -140,18 +110,18 @@ func printCentered(w io.Writer, text string, viewWidth int) {
 		}
 }
 
-//TODO refactor dialogs to get rid of code duplication
-func setUpDialogView(gui *gocui.Gui, viewname string, x1, y1, x2, y2 int, title string) (view *gocui.View, err error) {
-	if view, err = gui.SetView(viewname, x1, y1, x2, y2); err != nil {
+func setUpDialogView(gui *gocui.Gui, viewName, viewTitle string, x1, y1, x2, y2 int) (view *gocui.View, err error) {
+	if view, err = gui.SetView(viewName, x1, y1, x2, y2); err != nil {
 		if err != gocui.ErrUnknownView {
 			return nil, err
 		}
 
+		view.Highlight = true
 		view.Wrap = true
+		view.Editable = false
 		view.FgColor = gocui.ColorBlack
 		view.FgColor = gocui.ColorGreen
-
-		view.Title = title
+		view.Title = viewTitle
 	}
-	return
+	return view, nil
 }

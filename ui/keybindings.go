@@ -37,7 +37,10 @@ func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
 	if err = gui.SetKeybinding("", KeyCtrlP, ModNone, func(gui *Gui, v *View) error {
 		option := make(chan bool)
 		currView := gui.CurrentView()
-		gui.DeleteKeybindings("") //Prevents nested dialogs
+		//Prevents nested dialogs and other glitches (like double handler call)
+		for _, view := range gui.Views() {
+			gui.DeleteKeybindings(view.Name())
+		}
 		utils.ErrCheck(
 			manager.SelectView(
 				gui,
@@ -45,10 +48,10 @@ func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
 
 		go func() {
 			_ = <-option
-			manager.currentView = currView
+			manager.currView = currView
 
 			gui.Execute(func(gui *Gui) error {
-				utils.ErrCheck(manager.SelectView(gui, manager.currentView.Name()))
+				utils.ErrCheck(manager.SelectView(gui, manager.currView.Name()))
 				SetKeyBindings(gui, manager)
 				return nil
 			})
@@ -76,24 +79,16 @@ func SetKeyBindings(gui *Gui, manager *TregoManager) (err error) {
 //I used anonymous function for manager variable access
 func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err error) {
 	switchListRight := func(gui *Gui, v *View) (err error) {
-		for idx, list := range (mngr.Lists) {
-			if list.Name == mngr.currentView.Name() {
-				err = mngr.SelectView(gui, mngr.Lists[(idx + 1) % len(mngr.Lists)].Name)
-				break
-			}
-		}
+		mngr.currListIdx++
+		err = mngr.SelectView(gui, mngr.Lists[(mngr.currListIdx) % len(mngr.Lists)].Name)
 		return
 	}
 	switchListLeft := func(gui *Gui, v *View) (err error) {
-		for idx, list := range (mngr.Lists) {
-			if list.Name == mngr.currentView.Name() {
-				if idx == 0 {
-					idx = len(mngr.Lists)
-				}
-				err = mngr.SelectView(gui, mngr.Lists[(idx - 1) % len(mngr.Lists)].Name)
-				break
-			}
+		if mngr.currListIdx == 0 {
+			mngr.currListIdx = len(mngr.Lists)
 		}
+		mngr.currListIdx--
+		err = mngr.SelectView(gui, mngr.Lists[mngr.currListIdx % len(mngr.Lists)].Name)
 		return
 	}
 
