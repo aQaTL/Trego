@@ -24,7 +24,7 @@ func (manager *TregoManager) Layout(gui *Gui) error {
 	}
 
 	//loops through user's trello lists and adds them to gui
-	for idx, list := range (manager.Lists) {
+	for idx, list := range manager.Lists {
 		utils.ErrCheck(AddList(gui, list, idx))
 	}
 
@@ -67,7 +67,7 @@ func AddList(gui *Gui, list trello.List, index int) error {
 		if err != nil {
 			return err
 		}
-		for idx, card := range (cards) {
+		for idx, card := range cards {
 			color.New(color.BgBlack).Add(color.FgWhite).Printf("%d.%v\n", idx, card.Name)
 		}
 	}

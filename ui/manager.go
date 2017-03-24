@@ -13,9 +13,9 @@ type TregoManager struct {
 	currView    *gocui.View
 }
 
-func (manager *TregoManager) SelectView(gui *gocui.Gui, viewName string) error {
+func (mngr *TregoManager) SelectView(gui *gocui.Gui, viewName string) error {
 	if view, err := gui.SetCurrentView(viewName); err == nil {
-		manager.currView = view
+		mngr.currView = view
 		_, err = gui.SetViewOnTop(view.Name())
 		return err
 	} else {
@@ -23,12 +23,12 @@ func (manager *TregoManager) SelectView(gui *gocui.Gui, viewName string) error {
 	}
 }
 
-func (manager *TregoManager) CheckCurrView(gui *gocui.Gui, replacementViewName string) {
-	if manager.currView == nil {
-		if len(manager.Lists) > 0 {
-			utils.ErrCheck(manager.SelectView(gui, manager.Lists[0].Name))
+func (mngr *TregoManager) CheckCurrView(gui *gocui.Gui, replacementViewName string) {
+	if mngr.currView == nil {
+		if len(mngr.Lists) > 0 {
+			utils.ErrCheck(mngr.SelectView(gui, mngr.Lists[mngr.currListIdx].Name))
 		} else {
-			utils.ErrCheck(manager.SelectView(gui, replacementViewName))
+			utils.ErrCheck(mngr.SelectView(gui, replacementViewName))
 		}
 	}
 }
