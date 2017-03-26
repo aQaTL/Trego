@@ -15,13 +15,14 @@ func main() {
 	defer gui.Close()
 
 	user := conn.Connect(gui)
-	lists := conn.Lists(conn.BoardByName(user, "Trego"))
+	board := conn.BoardByName(user, "Testing board")
+	lists := conn.Lists(board)
 
 
 	gui.Mouse = false
 	gui.Highlight = true
 	gui.SelFgColor = ColorGreen
-	manager := &ui.TregoManager{Member: user, Lists: lists}
+	manager := &ui.TregoManager{Member: user, Lists: lists, CurrBoard: board}
 	gui.SetManager(manager)
 
 	ui.SetKeyBindings(gui, manager)

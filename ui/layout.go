@@ -4,7 +4,7 @@ import (
 	. "github.com/jroimartin/gocui"
 	"github.com/fatih/color"
 	"math"
-	"github.com/VojtechVitek/go-trello"
+	"github.com/aqatl/go-trello"
 	"github.com/aqatl/Trego/utils"
 )
 

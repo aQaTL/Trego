@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"github.com/VojtechVitek/go-trello"
+	"github.com/aqatl/go-trello"
 	"github.com/jroimartin/gocui"
 	"github.com/aqatl/Trego/utils"
 )
@@ -9,6 +9,7 @@ import (
 type TregoManager struct {
 	Member      *trello.Member
 	Lists       []trello.List
+	CurrBoard   *trello.Board
 	currListIdx int
 	currView    *gocui.View
 }

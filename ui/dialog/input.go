@@ -4,6 +4,7 @@ import (
 	"github.com/jroimartin/gocui"
 	"github.com/aqatl/Trego/utils"
 	"fmt"
+	"strings"
 )
 
 //Provides dialog with an input field
@@ -27,7 +28,7 @@ func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string
 		gocui.ModNone,
 		func(gui *gocui.Gui, view *gocui.View) error {
 			dialogCleanUp(gui, INPUT_DIALOG, INPUT_FIELD)
-			input <- inputView.Buffer()
+			input <- strings.TrimSuffix(inputView.Buffer(), "\n")
 			close(input)
 			return err
 		})
