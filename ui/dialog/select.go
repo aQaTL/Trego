@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func SelectDialog(title string, gui *gocui.Gui, selectionC chan int, values []string) *gocui.View {
+func SelectDialog(title string, gui *gocui.Gui, selIdxC chan int, values []string) *gocui.View {
 	x1, y1, x2, y2 := calcDialogBounds(0, gui)
 	y2 += len(values)
 
@@ -29,8 +29,8 @@ func SelectDialog(title string, gui *gocui.Gui, selectionC chan int, values []st
 			func(gui *gocui.Gui, view *gocui.View) error {
 				dialogCleanUp(gui, SELECT_DIALOG)
 				_, cy := view.Cursor()
-				selectionC <- cy
-				close(selectionC)
+				selIdxC <- cy
+				close(selIdxC)
 				return nil
 			}))
 
