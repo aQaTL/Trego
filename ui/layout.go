@@ -19,7 +19,7 @@ func (manager *TregoManager) Layout(gui *Gui) error {
 	if err := bottomBarLayout(gui); err != nil {
 		return err
 	}
-	if err := topBarLayout(gui); err != nil {
+	if err := topBarLayout(gui, manager); err != nil {
 		return err
 	}
 
@@ -75,7 +75,7 @@ func AddList(gui *Gui, list trello.List, index int) error {
 	return nil
 }
 
-func topBarLayout(gui *Gui) error {
+func topBarLayout(gui *Gui, mngr *TregoManager) error {
 	maxX, _ := gui.Size()
 	if v, err := gui.SetView(TOP_BAR, 0, 0, maxX - 1, 2); err != nil {
 		if err != ErrUnknownView {
@@ -87,7 +87,7 @@ func topBarLayout(gui *Gui) error {
 		v.BgColor = ColorBlack
 
 		color.Output = v
-		color.New(color.FgYellow).Add(color.Bold).Printf("Board: %v", "Trego")
+		color.New(color.FgYellow).Add(color.Bold).Printf("Board: %v", mngr.CurrBoard.Name)
 	}
 
 	return nil

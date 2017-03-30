@@ -30,7 +30,7 @@ func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string
 			dialogCleanUp(gui, INPUT_DIALOG, INPUT_FIELD)
 			input <- strings.TrimSuffix(inputView.Buffer(), "\n")
 			close(input)
-			return err
+			return nil
 		})
 
 	return inputView

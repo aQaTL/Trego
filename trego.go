@@ -18,7 +18,6 @@ func main() {
 	board := conn.BoardByName(user, "Testing board")
 	lists := conn.Lists(board)
 
-
 	gui.Mouse = false
 	gui.Highlight = true
 	gui.SelFgColor = ColorGreen

@@ -15,10 +15,10 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 	}
 
 	for _, list := range mngr.Lists {
-		if err = gui.SetKeybinding(list.Name, KeyArrowUp, ModNone, CursorUp); err != nil {
+		if err = gui.SetKeybinding(list.Name, KeyArrowUp, ModNone, utils.CursorUp); err != nil {
 			return
 		}
-		if err = gui.SetKeybinding(list.Name, KeyArrowDown, ModNone, CursorDown); err != nil {
+		if err = gui.SetKeybinding(list.Name, KeyArrowDown, ModNone, utils.CursorDown); err != nil {
 			return
 		}
 		if err = addListSwitchingFunc(gui, list.Name, mngr); err != nil {
@@ -32,8 +32,60 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 		if err = addCardAddingFunc(gui, list.Name, mngr); err != nil {
 			return
 		}
+
+		if err = addCardMovingFunc(gui, list.Name, mngr); err != nil {
+			return
+		}
 	}
 	return
+}
+func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
+	return gui.SetKeybinding(listName, 'm', ModNone, func(gui *Gui, view *View) error {
+		destListC := make(chan int)
+		for _, list := range gui.Views() {
+			gui.DeleteKeybindings(list.Name())
+		}
+
+		listNames := make([]string, len(mngr.Lists))
+		for idx, list := range mngr.Lists {
+			listNames[idx] = list.Name
+		}
+
+		//Used to determine card, that will be moved
+		_, cy := view.Cursor()
+
+		utils.ErrCheck(
+			mngr.SelectView(
+				gui,
+				dialog.SelectDialog(
+					"Choose destination",
+					gui,
+					destListC,
+					listNames).
+						Name()))
+
+		go func() {
+			listIdx := <-destListC
+			cards, err := mngr.Lists[mngr.currListIdx].Cards()
+			utils.ErrCheck(err)
+
+			movedCard, err := cards[cy].Move(mngr.Lists[listIdx])
+			utils.ErrCheck(err)
+
+			log.Printf("Card %v moved to list: %v", movedCard.Name, mngr.Lists[listIdx].Name)
+
+			gui.Execute(func(gui *Gui) error {
+				utils.ErrCheck(
+					gui.DeleteView(mngr.Lists[listIdx].Name),
+					gui.DeleteView(mngr.Lists[mngr.currListIdx].Name)) //Forces view update
+				return nil
+			})
+
+			SetKeyBindings(gui, mngr)
+		}()
+
+		return nil
+	})
 }
 
 //Keybinding for switching list on tab keypress
