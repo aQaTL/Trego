@@ -7,6 +7,7 @@ import (
 	"github.com/aqatl/Trego/ui/dialog"
 	"log"
 	"math"
+	"strconv"
 )
 
 func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
@@ -53,6 +54,11 @@ func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 
 		//Used to determine card, that will be moved
 		_, cy := view.Cursor()
+		currLine, err := view.Line(cy)
+		utils.ErrCheck(err)
+		cardIdx64, err := strconv.ParseInt(currLine[:1], 10, 32)
+		utils.ErrCheck(err)
+		cardIdx := int(cardIdx64)
 
 		utils.ErrCheck(
 			mngr.SelectView(
@@ -69,7 +75,7 @@ func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 			cards, err := mngr.Lists[mngr.currListIdx].Cards()
 			utils.ErrCheck(err)
 
-			movedCard, err := cards[cy].Move(mngr.Lists[listIdx])
+			movedCard, err := cards[cardIdx].Move(mngr.Lists[listIdx])
 			utils.ErrCheck(err)
 
 			log.Printf("Card %v moved to list: %v", movedCard.Name, mngr.Lists[listIdx].Name)
@@ -101,7 +107,7 @@ func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err er
 			mngr.currListIdx = len(mngr.Lists)
 		}
 		mngr.currListIdx--
-		err = mngr.SelectView(gui, mngr.Lists[mngr.currListIdx % len(mngr.Lists)].Name)
+		err = mngr.SelectView(gui, mngr.Lists[mngr.currListIdx%len(mngr.Lists)].Name)
 		return
 	}
 
@@ -134,8 +140,8 @@ func addCardAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 			list := mngr.Lists[mngr.currListIdx]
 			card, err := list.AddCard(trello.Card{
 				IdList: list.Id,
-				Name: cardName,
-				Pos: math.MaxFloat64, //end of the list
+				Name:   cardName,
+				Pos:    math.MaxFloat64, //end of the list
 			})
 
 			if err != nil {
@@ -172,16 +178,16 @@ func addListAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 			viewName := <-viewNameC
 
 			list, err := mngr.CurrBoard.AddList(trello.List{
-				Name: viewName,
+				Name:    viewName,
 				IdBoard: mngr.CurrBoard.Id,
-				Pos: math.MaxFloat32,
+				Pos:     math.MaxFloat32,
 			})
 			if err != nil {
 				log.Printf("List add: %v", err)
 			}
 
 			mngr.Lists = append(mngr.Lists, *list)
-			utils.ErrCheck(AddList(gui, *list, len(mngr.Lists) - 1))
+			utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1))
 			SetKeyBindings(gui, mngr)
 		}()
 		return nil

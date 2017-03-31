@@ -3,7 +3,7 @@
 package conn
 
 import (
-	. "github.com/VojtechVitek/go-trello"
+	. "github.com/aqatl/go-trello"
 	"encoding/json"
 	"io/ioutil"
 	"log"

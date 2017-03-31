@@ -33,4 +33,3 @@ func CursorDown(g *Gui, v *View) (err error) {
 	}
 	return
 }
-
