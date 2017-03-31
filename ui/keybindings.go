@@ -16,30 +16,18 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 	}
 
 	for _, list := range mngr.Lists {
-		if err = gui.SetKeybinding(list.Name, KeyArrowUp, ModNone, utils.CursorUp); err != nil {
-			return
-		}
-		if err = gui.SetKeybinding(list.Name, KeyArrowDown, ModNone, utils.CursorDown); err != nil {
-			return
-		}
-		if err = addListSwitchingFunc(gui, list.Name, mngr); err != nil {
-			return
-		}
-
-		if err = addListAddingFunc(gui, list.Name, mngr); err != nil {
-			return
-		}
-
-		if err = addCardAddingFunc(gui, list.Name, mngr); err != nil {
-			return
-		}
-
-		if err = addCardMovingFunc(gui, list.Name, mngr); err != nil {
-			return
-		}
+		utils.ErrCheck(
+			gui.SetKeybinding(list.Name, KeyArrowUp, ModNone, utils.CursorUp),
+			gui.SetKeybinding(list.Name, KeyArrowDown, ModNone, utils.CursorDown),
+			addListSwitchingFunc(gui, list.Name, mngr),
+			addListAddingFunc(gui, list.Name, mngr),
+			addCardAddingFunc(gui, list.Name, mngr),
+			addCardMovingFunc(gui, list.Name, mngr),
+		)
 	}
 	return
 }
+
 func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, 'm', ModNone, func(gui *Gui, view *View) error {
 		destListC := make(chan int)
@@ -95,7 +83,7 @@ func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 }
 
 //Keybinding for switching list on tab keypress
-//I used anonymous function for manager variable access
+//I used anonymous function for mngr variable access
 func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err error) {
 	switchListRight := func(gui *Gui, v *View) (err error) {
 		mngr.currListIdx = (mngr.currListIdx + 1) % len(mngr.Lists)

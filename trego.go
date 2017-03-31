@@ -21,10 +21,10 @@ func main() {
 	gui.Mouse = false
 	gui.Highlight = true
 	gui.SelFgColor = ColorGreen
-	manager := &ui.TregoManager{Member: user, Lists: lists, CurrBoard: board}
-	gui.SetManager(manager)
+	mngr := &ui.TregoManager{Member: user, Lists: lists, CurrBoard: board}
+	gui.SetManager(mngr)
 
-	ui.SetKeyBindings(gui, manager)
+	ui.SetKeyBindings(gui, mngr)
 
 	if err := gui.MainLoop(); err != nil && err != ErrQuit {
 		log.Panicln(err)

@@ -15,25 +15,23 @@ const (
 	LIST_WIDTH int = 24
 )
 
-func (manager *TregoManager) Layout(gui *Gui) error {
-	if err := bottomBarLayout(gui); err != nil {
-		return err
-	}
-	if err := topBarLayout(gui, manager); err != nil {
-		return err
-	}
+func (mngr *TregoManager) Layout(gui *Gui) error {
+	utils.ErrCheck(
+		bottomBarLayout(gui),
+		topBarLayout(gui, mngr),
+	)
 
 	//loops through user's trello lists and adds them to gui
-	for idx, list := range manager.Lists {
+	for idx, list := range mngr.Lists {
 		utils.ErrCheck(AddList(gui, list, idx))
 	}
 
-	manager.CheckCurrView(gui, TOP_BAR)
+	mngr.CheckCurrView(gui, TOP_BAR)
 
-	if _, err := gui.SetCurrentView(manager.currView.Name()); err != nil {
-		manager.currView = nil
-		manager.CheckCurrView(gui, TOP_BAR)
-		utils.ErrCheck(manager.SelectView(gui, manager.currView.Name()))
+	if _, err := gui.SetCurrentView(mngr.currView.Name()); err != nil {
+		mngr.currView = nil
+		mngr.CheckCurrView(gui, TOP_BAR)
+		utils.ErrCheck(mngr.SelectView(gui, mngr.currView.Name()))
 		return nil
 	}
 
