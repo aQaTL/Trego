@@ -28,7 +28,7 @@ func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string
 		gocui.ModNone,
 		func(gui *gocui.Gui, view *gocui.View) error {
 			dialogCleanUp(gui, INPUT_DIALOG, INPUT_FIELD)
-			input <- strings.TrimSuffix(inputView.Buffer(), "\n")
+			input <- strings.TrimSuffix(inputView.Buffer(), " \n")
 			close(input)
 			return nil
 		})
