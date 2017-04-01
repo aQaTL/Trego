@@ -6,13 +6,14 @@ import (
 	"math"
 	"github.com/aqatl/go-trello"
 	"github.com/aqatl/Trego/utils"
+	"strconv"
 )
 
 const (
-	BOTTOM_BAR string = "botbar"
-	TOP_BAR string = "topbar"
+	BOTTOM_BAR   string = "botbar"
+	TOP_BAR      string = "topbar"
 	BOARD_SELECT string = "boardselectview"
-	LIST_WIDTH int = 24
+	LIST_WIDTH   int    = 24
 )
 
 func (mngr *TregoManager) Layout(gui *Gui) error {
@@ -41,8 +42,8 @@ func (mngr *TregoManager) Layout(gui *Gui) error {
 func AddList(gui *Gui, list trello.List, index int) error {
 	_, maxY := gui.Size()
 	if v, err := gui.SetView(list.Name,
-		index * LIST_WIDTH + int(math.Abs(sign(index))), 3,
-		index * LIST_WIDTH + LIST_WIDTH, maxY - 5);
+		index*LIST_WIDTH+int(math.Abs(sign(index))), 3,
+		index*LIST_WIDTH+LIST_WIDTH, maxY-5);
 			err != nil {
 
 		if err != ErrUnknownView {
@@ -75,7 +76,7 @@ func AddList(gui *Gui, list trello.List, index int) error {
 
 func topBarLayout(gui *Gui, mngr *TregoManager) error {
 	maxX, _ := gui.Size()
-	if v, err := gui.SetView(TOP_BAR, 0, 0, maxX - 1, 2); err != nil {
+	if v, err := gui.SetView(TOP_BAR, 0, 0, maxX-1, 2); err != nil {
 		if err != ErrUnknownView {
 			return err
 		}
@@ -94,7 +95,7 @@ func topBarLayout(gui *Gui, mngr *TregoManager) error {
 //bottom bar with shortcuts
 func bottomBarLayout(gui *Gui) error {
 	maxX, maxY := gui.Size()
-	if v, err := gui.SetView(BOTTOM_BAR, 0, maxY - 4, maxX - 1, maxY - 1); err != nil {
+	if v, err := gui.SetView(BOTTOM_BAR, 0, maxY-4, maxX-1, maxY-1); err != nil {
 		if err != ErrUnknownView {
 			return err
 		}
@@ -112,6 +113,15 @@ func bottomBarLayout(gui *Gui) error {
 
 	}
 	return nil
+}
+
+func SelectedItemIdx(view *View) int {
+	_, cy := view.Cursor()
+	currLine, err := view.Line(cy)
+	utils.ErrCheck(err)
+	itemIdx64, err := strconv.ParseInt(currLine[:1], 10, 32)
+	utils.ErrCheck(err)
+	return int(itemIdx64)
 }
 
 func sign(x int) float64 {

@@ -7,7 +7,6 @@ import (
 	"github.com/aqatl/Trego/ui/dialog"
 	"log"
 	"math"
-	"strconv"
 )
 
 func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
@@ -23,9 +22,50 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 			addListAddingFunc(gui, list.Name, mngr),
 			addCardAddingFunc(gui, list.Name, mngr),
 			addCardMovingFunc(gui, list.Name, mngr),
+			addCardDeletingFunc(gui, list.Name, mngr),
 		)
 	}
 	return
+}
+
+func addCardDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
+	return gui.SetKeybinding(listName, 'd', ModNone, func(gui *Gui, view *View) error {
+		delModeC := make(chan int)
+		utils.DelNonGlobalKeyBinds(gui)
+
+		utils.ErrCheck(
+			mngr.SelectView(
+				gui,
+				dialog.SelectDialog(
+					"Choose action",
+					gui,
+					delModeC,
+					[]string{"Archive", "Delete"}).
+						Name()))
+
+		go func() {
+			delMode := <- delModeC
+			cards, err := mngr.Lists[mngr.currListIdx].Cards()
+			utils.ErrCheck(err)
+			cardIdx := SelectedItemIdx(view)
+			if delMode == 0 { //Archive
+				utils.ErrCheck(cards[cardIdx].Archive(true))
+				log.Printf("Card %v archived successfully", cards[cardIdx].Name)
+			} else if delMode == 1 { //Delete
+				utils.ErrCheck(cards[cardIdx].Delete())
+				log.Printf("Card %v deleted successfully", cards[cardIdx].Name)
+			} else {
+				log.Print("Card deleting failed, delMode ", delMode)
+			}
+
+			gui.Execute(func (gui *Gui) error {
+				utils.ErrCheck(gui.DeleteView(mngr.Lists[mngr.currListIdx].Name))
+				return nil
+			})
+			SetKeyBindings(gui, mngr)
+		}()
+		return nil
+	})
 }
 
 func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
@@ -41,12 +81,7 @@ func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 		}
 
 		//Used to determine card, that will be moved
-		_, cy := view.Cursor()
-		currLine, err := view.Line(cy)
-		utils.ErrCheck(err)
-		cardIdx64, err := strconv.ParseInt(currLine[:1], 10, 32)
-		utils.ErrCheck(err)
-		cardIdx := int(cardIdx64)
+		cardIdx := SelectedItemIdx(view)
 
 		utils.ErrCheck(
 			mngr.SelectView(
