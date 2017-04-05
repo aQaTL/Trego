@@ -44,21 +44,20 @@ func addCardDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 						Name()))
 
 		go func() {
-			delMode := <- delModeC
-			cards, err := mngr.Lists[mngr.currListIdx].Cards()
-			utils.ErrCheck(err)
-			cardIdx := SelectedItemIdx(view)
-			if delMode == 0 { //Archive
-				utils.ErrCheck(cards[cardIdx].Archive(true))
-				log.Printf("Card %v archived successfully", cards[cardIdx].Name)
-			} else if delMode == 1 { //Delete
-				utils.ErrCheck(cards[cardIdx].Delete())
-				log.Printf("Card %v deleted successfully", cards[cardIdx].Name)
-			} else {
-				log.Print("Card deleting failed, delMode ", delMode)
+			if delMode, ok := <-delModeC; ok {
+				cards, err := mngr.Lists[mngr.currListIdx].Cards()
+				utils.ErrCheck(err)
+				cardIdx := SelectedItemIdx(view)
+				if delMode == 0 { //Archive
+					utils.ErrCheck(cards[cardIdx].Archive(true))
+					log.Printf("Card %v archived successfully", cards[cardIdx].Name)
+				} else if delMode == 1 { //Delete
+					utils.ErrCheck(cards[cardIdx].Delete())
+					log.Printf("Card %v deleted successfully", cards[cardIdx].Name)
+				}
 			}
 
-			gui.Execute(func (gui *Gui) error {
+			gui.Execute(func(gui *Gui) error {
 				utils.ErrCheck(gui.DeleteView(mngr.Lists[mngr.currListIdx].Name))
 				return nil
 			})
@@ -94,21 +93,21 @@ func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 						Name()))
 
 		go func() {
-			listIdx := <-destListC
-			cards, err := mngr.Lists[mngr.currListIdx].Cards()
-			utils.ErrCheck(err)
+			if listIdx, ok := <-destListC; ok {
+				cards, err := mngr.Lists[mngr.currListIdx].Cards()
+				utils.ErrCheck(err)
 
-			movedCard, err := cards[cardIdx].Move(mngr.Lists[listIdx])
-			utils.ErrCheck(err)
+				movedCard, err := cards[cardIdx].Move(mngr.Lists[listIdx])
+				utils.ErrCheck(err)
 
-			log.Printf("Card %v moved to list: %v", movedCard.Name, mngr.Lists[listIdx].Name)
-
-			gui.Execute(func(gui *Gui) error {
-				utils.ErrCheck(
-					gui.DeleteView(mngr.Lists[listIdx].Name),
-					gui.DeleteView(mngr.Lists[mngr.currListIdx].Name)) //Forces view update
-				return nil
-			})
+				log.Printf("Card %v moved to list: %v", movedCard.Name, mngr.Lists[listIdx].Name)
+				gui.Execute(func(gui *Gui) error {
+					utils.ErrCheck(
+						gui.DeleteView(mngr.Lists[listIdx].Name),
+						gui.DeleteView(mngr.Lists[mngr.currListIdx].Name)) //Forces view update
+					return nil
+				})
+			}
 
 			SetKeyBindings(gui, mngr)
 		}()
@@ -158,24 +157,24 @@ func addCardAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 				cardNameC).Name()))
 
 		go func() {
-			cardName := <-cardNameC
-			SetKeyBindings(gui, mngr)
-			list := mngr.Lists[mngr.currListIdx]
-			card, err := list.AddCard(trello.Card{
-				IdList: list.Id,
-				Name:   cardName,
-				Pos:    math.MaxFloat64, //end of the list
-			})
+			if cardName, ok := <-cardNameC; ok {
+				list := mngr.Lists[mngr.currListIdx]
+				card, err := list.AddCard(trello.Card{
+					IdList: list.Id,
+					Name:   cardName,
+					Pos:    math.MaxFloat64, //end of the list
+				})
+				if err != nil {
+					log.Panicf("Card add: %v in list %v", err, list.Name)
+				}
+				log.Printf("Successfully added new card: %v", card.Name)
 
-			if err != nil {
-				log.Panicf("Card add: %v in list %v", err, list.Name)
+				gui.Execute(func(gui *Gui) error {
+					utils.ErrCheck(gui.DeleteView(list.Name)) //Forces view update
+					return nil
+				})
 			}
-
-			gui.Execute(func(gui *Gui) error {
-				utils.ErrCheck(gui.DeleteView(list.Name)) //Forces view update
-				return nil
-			})
-			log.Printf("Successfully added new card: %v", card.Name)
+			SetKeyBindings(gui, mngr)
 		}()
 		return nil
 	})
@@ -198,19 +197,20 @@ func addListAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 				viewNameC).Name()))
 
 		go func() {
-			viewName := <-viewNameC
+			if viewName, ok := <-viewNameC; ok {
+				list, err := mngr.CurrBoard.AddList(trello.List{
+					Name:    viewName,
+					IdBoard: mngr.CurrBoard.Id,
+					Pos:     math.MaxFloat32,
+				})
+				if err != nil {
+					log.Printf("List add: %v", err)
+				}
 
-			list, err := mngr.CurrBoard.AddList(trello.List{
-				Name:    viewName,
-				IdBoard: mngr.CurrBoard.Id,
-				Pos:     math.MaxFloat32,
-			})
-			if err != nil {
-				log.Printf("List add: %v", err)
+				mngr.Lists = append(mngr.Lists, *list)
+				utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1))
 			}
 
-			mngr.Lists = append(mngr.Lists, *list)
-			utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1))
 			SetKeyBindings(gui, mngr)
 		}()
 		return nil

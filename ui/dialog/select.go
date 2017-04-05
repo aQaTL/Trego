@@ -34,5 +34,16 @@ func SelectDialog(title string, gui *gocui.Gui, selIdxC chan int, values []strin
 				return nil
 			}))
 
+	utils.ErrCheck(
+		gui.SetKeybinding(
+			SELECT_DIALOG,
+			gocui.KeyCtrlQ,
+			gocui.ModNone,
+			func(gui *gocui.Gui, view *gocui.View) error {
+				close(selIdxC)
+				dialogCleanUp(gui, SELECT_DIALOG)
+				return nil
+			}))
+
 	return dialogView
 }

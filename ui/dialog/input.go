@@ -17,21 +17,33 @@ func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string
 	dialogView.Highlight = false
 	printCentered(dialogView, msg, (x2 - x1))
 
-	inputView, err := setUpDialogView(gui, INPUT_FIELD, "", x1, y1 + 3, x2, y2 + 3) //Place it a little lower
+	inputView, err := setUpDialogView(gui, INPUT_FIELD, "", x1, y1+3, x2, y2+3) //Place it a little lower
 	utils.ErrCheck(err)
 	inputView.Editable = true
 	fmt.Fprint(inputView, initValue)
 
-	gui.SetKeybinding(
-		INPUT_FIELD,
-		gocui.KeyEnter,
-		gocui.ModNone,
-		func(gui *gocui.Gui, view *gocui.View) error {
-			dialogCleanUp(gui, INPUT_DIALOG, INPUT_FIELD)
-			input <- strings.TrimSuffix(inputView.Buffer(), " \n")
-			close(input)
-			return nil
-		})
+	utils.ErrCheck(
+		gui.SetKeybinding(
+			INPUT_FIELD,
+			gocui.KeyEnter,
+			gocui.ModNone,
+			func(gui *gocui.Gui, view *gocui.View) error {
+				dialogCleanUp(gui, INPUT_DIALOG, INPUT_FIELD)
+				input <- strings.TrimSuffix(inputView.Buffer(), " \n")
+				close(input)
+				return nil
+			}))
+
+	utils.ErrCheck(
+		gui.SetKeybinding(
+			INPUT_FIELD,
+			gocui.KeyCtrlQ,
+			gocui.ModNone,
+			func(gui *gocui.Gui, view *gocui.View) error {
+				close(input)
+				dialogCleanUp(gui, INPUT_DIALOG, INPUT_FIELD)
+				return nil
+			}))
 
 	return inputView
 }

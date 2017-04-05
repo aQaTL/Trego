@@ -13,8 +13,9 @@
 				gui,
 				dialog.InputDialog("Are you sure? [y/n]", "", "", gui, input).Name()))
 		go func() {
-			userInput := <-input
-			log.Println(userInput)
+			if userInput, ok := <-input; ok {
+				log.Print(userInput)
+			}
 			SetKeyBindings(gui, mngr)
 		}()
 
@@ -33,7 +34,9 @@
 				dialog.ConfirmDialog("message", "title", gui, option).Name()))
 
 		go func() {
-			_ = <-option
+			if choice, ok = <-option; ok {
+				log.Printf("Choosen option: %v", choice)
+			}
 
 			mngr.currView = previousView
 			log.Println("thread: ", mngr.currView.Name(), previousView.Name())
@@ -56,9 +59,9 @@ import (
 
 const (
 	CONFIRM_DIALOG = "confirmdialogview"
-	INPUT_DIALOG = "inputdialogview"
-	INPUT_FIELD = "inputdialogfield"
-	SELECT_DIALOG = "selectdialogview"
+	INPUT_DIALOG   = "inputdialogview"
+	INPUT_FIELD    = "inputdialogfield"
+	SELECT_DIALOG  = "selectdialogview"
 )
 
 func calcDialogBounds(msgL int, gui *gocui.Gui) (x1, y1, x2, y2 int) {
@@ -67,7 +70,7 @@ func calcDialogBounds(msgL int, gui *gocui.Gui) (x1, y1, x2, y2 int) {
 	x1 = int(w / 2.0 * 0.7)
 	x2 = int(w / 2 * 1.3)
 	y1 = int(h / 2 * 0.8)
-	y2 = int(float64(y1) + math.Ceil(float64(msgL) / float64(x2 - x1))) + 1
+	y2 = int(float64(y1)+math.Ceil(float64(msgL)/float64(x2-x1))) + 1
 
 	return
 }
@@ -82,7 +85,7 @@ func dialogCleanUp(gui *gocui.Gui, dialogTypes ...string) {
 func printCentered(w io.Writer, text string, viewWidth int) {
 	msgL := len(text)
 	if msgL < viewWidth {
-		fmt.Fprintf(w, "%s%s\n", strings.Repeat(" ", (viewWidth / 2 - (msgL / 2)) - 1), text)
+		fmt.Fprintf(w, "%s%s\n", strings.Repeat(" ", (viewWidth/2-(msgL/2))-1), text)
 	} else {
 		fmt.Fprintf(w, "%s\n", text)
 	}

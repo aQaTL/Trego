@@ -3,7 +3,6 @@ package dialog
 import (
 	"github.com/jroimartin/gocui"
 	"github.com/aqatl/Trego/utils"
-	"log"
 )
 
 //Provides option dialog. User can make decision with 'y' and 'n' key.
@@ -18,23 +17,32 @@ func ConfirmDialog(msg, title string, gui *gocui.Gui, choice chan bool) (view *g
 	printCentered(confirmView, msg, winW)
 	view = confirmView
 
-	if err := gui.SetKeybinding(CONFIRM_DIALOG, 'y', gocui.ModNone,
+	utils.ErrCheck(gui.SetKeybinding(CONFIRM_DIALOG, 'y', gocui.ModNone,
 		func(gui *gocui.Gui, view *gocui.View) (err error) {
 			dialogCleanUp(gui, CONFIRM_DIALOG)
 			choice <- true
 			close(choice)
 			return
-		}); err != nil {
-		log.Panicln(err)
-	}
-	if err := gui.SetKeybinding(CONFIRM_DIALOG, 'n', gocui.ModNone,
+		}))
+
+	utils.ErrCheck(gui.SetKeybinding(CONFIRM_DIALOG, 'n', gocui.ModNone,
 		func(gui *gocui.Gui, view *gocui.View) (err error) {
 			dialogCleanUp(gui, CONFIRM_DIALOG)
 			choice <- false
 			close(choice)
 			return
-		}); err != nil {
-		log.Panicln(err)
-	}
+		}))
+
+	utils.ErrCheck(
+		gui.SetKeybinding(
+			CONFIRM_DIALOG,
+			gocui.KeyCtrlQ,
+			gocui.ModNone,
+			func(gui *gocui.Gui, view *gocui.View) error {
+				close(choice)
+				dialogCleanUp(gui, CONFIRM_DIALOG)
+				return nil
+			}))
+
 	return
 }
