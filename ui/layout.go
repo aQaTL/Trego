@@ -12,7 +12,6 @@ import (
 const (
 	BOTTOM_BAR   string = "botbar"
 	TOP_BAR      string = "topbar"
-	BOARD_SELECT string = "boardselectview"
 	LIST_WIDTH   int    = 24
 )
 

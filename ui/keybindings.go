@@ -7,6 +7,7 @@ import (
 	"github.com/aqatl/Trego/ui/dialog"
 	"log"
 	"math"
+	"github.com/aqatl/Trego/conn"
 )
 
 func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
@@ -23,6 +24,7 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 			addCardAddingFunc(gui, list.Name, mngr),
 			addCardMovingFunc(gui, list.Name, mngr),
 			addCardDeletingFunc(gui, list.Name, mngr),
+			addBoardSwitchingFunc(gui, list.Name, mngr),
 		)
 	}
 	return
@@ -143,9 +145,7 @@ func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err er
 func addCardAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(viewName, 'n', ModNone, func(gui *Gui, view *View) error {
 		cardNameC := make(chan string)
-		for _, view := range gui.Views() {
-			gui.DeleteKeybindings(view.Name())
-		}
+		utils.DelNonGlobalKeyBinds(gui)
 
 		utils.ErrCheck(mngr.SelectView(
 			gui,
@@ -183,9 +183,7 @@ func addCardAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 func addListAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(viewName, 'l', ModNone, func(gui *Gui, view *View) error {
 		viewNameC := make(chan string)
-		for _, view := range gui.Views() {
-			gui.DeleteKeybindings(view.Name())
-		}
+		utils.DelNonGlobalKeyBinds(gui)
 
 		utils.ErrCheck(mngr.SelectView(
 			gui,
@@ -211,6 +209,52 @@ func addListAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 				utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1))
 			}
 
+			SetKeyBindings(gui, mngr)
+		}()
+		return nil
+	})
+}
+
+func addBoardSwitchingFunc(gui *Gui, listName string, mngr *TregoManager) error {
+	return gui.SetKeybinding(listName, 'b', ModNone, func(gui *Gui, view *View) error {
+		boardSelC := make(chan int)
+		utils.DelNonGlobalKeyBinds(gui)
+
+		boards, err := mngr.Member.Boards()
+		utils.ErrCheck(err)
+		boardNames := make([]string, len(boards))
+		for i, board := range boards {
+			boardNames[i] = board.Name
+		}
+
+		utils.ErrCheck(
+			mngr.SelectView(
+				gui,
+				dialog.SelectDialog(
+					"Select board",
+					gui,
+					boardSelC,
+					boardNames,
+				).Name()))
+
+		go func() {
+			if boardIdx, ok := <-boardSelC; ok {
+				mngr.CurrBoard = &boards[boardIdx]
+				log.Printf("Changing board to: %v", mngr.CurrBoard.Name)
+
+				for _, list := range mngr.Lists {
+					utils.ErrCheck(gui.DeleteView(list.Name))
+				}
+				utils.ErrCheck(gui.DeleteView(TOP_BAR))
+				mngr.Lists = conn.Lists(mngr.CurrBoard)
+				mngr.currListIdx = 0
+				mngr.currView = nil
+
+				gui.Execute(func (gui *Gui) error {
+					mngr.Layout(gui)
+					return nil
+				})
+			}
 			SetKeyBindings(gui, mngr)
 		}()
 		return nil
