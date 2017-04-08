@@ -7,11 +7,12 @@ import (
 )
 
 type TregoManager struct {
-	Member      *trello.Member
-	Lists       []trello.List
-	CurrBoard   *trello.Board
-	currListIdx int
-	currView    *gocui.View
+	Member         *trello.Member
+	Lists          []trello.List
+	CurrBoard      *trello.Board
+	currListIdx    int
+	currView       *gocui.View
+	listViewOffset int
 }
 
 func (mngr *TregoManager) SelectView(gui *gocui.Gui, viewName string) error {

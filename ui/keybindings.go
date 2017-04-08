@@ -123,7 +123,17 @@ func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err error) {
 	switchListRight := func(gui *Gui, v *View) (err error) {
 		mngr.currListIdx = (mngr.currListIdx + 1) % len(mngr.Lists)
-		err = mngr.SelectView(gui, mngr.Lists[mngr.currListIdx].Name)
+		nextViewName := mngr.Lists[mngr.currListIdx].Name
+
+		_, _, x2, _, err := gui.ViewPosition(nextViewName)
+		w, _ := gui.Size()
+		if x2 > w {
+			mngr.listViewOffset -= 1
+		} else if mngr.currListIdx == 0 {
+			mngr.listViewOffset = 0
+		}
+
+		err = mngr.SelectView(gui, nextViewName)
 		return
 	}
 	switchListLeft := func(gui *Gui, v *View) (err error) {
@@ -131,8 +141,19 @@ func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err er
 			mngr.currListIdx = len(mngr.Lists)
 		}
 		mngr.currListIdx--
-		err = mngr.SelectView(gui, mngr.Lists[mngr.currListIdx%len(mngr.Lists)].Name)
-		return
+		previousViewName := mngr.Lists[mngr.currListIdx%len(mngr.Lists)].Name
+
+		x1, _, _, _, err := gui.ViewPosition(previousViewName)
+		if x1 < 0 {
+			mngr.listViewOffset += 1
+		} else if mngr.currListIdx == len(mngr.Lists)-1 {
+			//Scrolls board to the end
+			for mngr.currListIdx = 0; mngr.currListIdx != len(mngr.Lists)-1; {
+				utils.ErrCheck(switchListRight(gui, mngr.currView))
+			}
+		}
+
+		return mngr.SelectView(gui, previousViewName)
 	}
 
 	gui.SetKeybinding(viewName, KeyTab, ModNone, switchListRight)
@@ -206,7 +227,7 @@ func addListAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 				}
 
 				mngr.Lists = append(mngr.Lists, *list)
-				utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1))
+				utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1, mngr.listViewOffset))
 			}
 
 			SetKeyBindings(gui, mngr)
@@ -248,9 +269,10 @@ func addBoardSwitchingFunc(gui *Gui, listName string, mngr *TregoManager) error 
 				utils.ErrCheck(gui.DeleteView(TOP_BAR))
 				mngr.Lists = conn.Lists(mngr.CurrBoard)
 				mngr.currListIdx = 0
+				mngr.listViewOffset = 0
 				mngr.currView = nil
 
-				gui.Execute(func (gui *Gui) error {
+				gui.Execute(func(gui *Gui) error {
 					mngr.Layout(gui)
 					return nil
 				})

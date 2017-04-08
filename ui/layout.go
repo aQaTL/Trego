@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	BOTTOM_BAR   string = "botbar"
-	TOP_BAR      string = "topbar"
-	LIST_WIDTH   int    = 24
+	BOTTOM_BAR string = "botbar"
+	TOP_BAR    string = "topbar"
+	LIST_WIDTH int    = 24
 )
 
 func (mngr *TregoManager) Layout(gui *Gui) error {
@@ -24,7 +24,7 @@ func (mngr *TregoManager) Layout(gui *Gui) error {
 
 	//loops through user's trello lists and adds them to gui
 	for idx, list := range mngr.Lists {
-		utils.ErrCheck(AddList(gui, list, idx))
+		utils.ErrCheck(AddList(gui, list, idx, mngr.listViewOffset))
 	}
 
 	mngr.CheckCurrView(gui, TOP_BAR)
@@ -39,11 +39,11 @@ func (mngr *TregoManager) Layout(gui *Gui) error {
 	return nil
 }
 
-func AddList(gui *Gui, list trello.List, index int) error {
+func AddList(gui *Gui, list trello.List, index, offset int) error {
 	_, maxY := gui.Size()
 	if v, err := gui.SetView(list.Name,
-		index*LIST_WIDTH+int(math.Abs(sign(index))), 3,
-		index*LIST_WIDTH+LIST_WIDTH, maxY-5);
+		(index+offset)*LIST_WIDTH+int(math.Abs(sign(index))), 3,
+		(index+offset)*LIST_WIDTH+LIST_WIDTH, maxY-5);
 			err != nil {
 
 		if err != ErrUnknownView {
