@@ -7,6 +7,7 @@ import (
 	"github.com/aqatl/go-trello"
 	"github.com/aqatl/Trego/utils"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -118,7 +119,8 @@ func SelectedItemIdx(view *View) int {
 	_, cy := view.Cursor()
 	currLine, err := view.Line(cy)
 	utils.ErrCheck(err)
-	itemIdx64, err := strconv.ParseInt(currLine[:1], 10, 32)
+	dotIdx := strings.Index(currLine, ".")
+	itemIdx64, err := strconv.ParseInt(currLine[:dotIdx], 10, 32)
 	utils.ErrCheck(err)
 	return int(itemIdx64)
 }
