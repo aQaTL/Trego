@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	BOTTOM_BAR string = "botbar"
-	TOP_BAR    string = "topbar"
-	LIST_WIDTH int    = 24
+	BOTTOM_BAR  string = "botbar"
+	TOP_BAR     string = "topbar"
+	SEARCH_VIEW string = "searchview"
+	LIST_WIDTH  int    = 24
 )
 
 func (mngr *TregoManager) Layout(gui *Gui) error {

@@ -8,6 +8,8 @@ import (
 	"log"
 	"math"
 	"github.com/aqatl/Trego/conn"
+	"strings"
+	"fmt"
 )
 
 func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
@@ -25,9 +27,49 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 			addCardMovingFunc(gui, list.Name, mngr),
 			addCardDeletingFunc(gui, list.Name, mngr),
 			addBoardSwitchingFunc(gui, list.Name, mngr),
+			addCardSearchingFunc(gui, list.Name, mngr),
 		)
 	}
 	return
+}
+func addCardSearchingFunc(gui *Gui, listName string, mngr *TregoManager) error {
+	gui.SetKeybinding(listName, 's', ModNone, func(gui *Gui, listView *View) error {
+
+		x1, _, x2, _, err1 := gui.ViewPosition(listName)
+		_, y1, _, _, err2 := gui.ViewPosition(BOTTOM_BAR)
+		utils.ErrCheck(err1, err2)
+		if searchView, err := gui.SetView(SEARCH_VIEW, x1, y1-3, x2, y1-1); err != nil {
+			if err != ErrUnknownView {
+				return err
+			}
+
+			searchView.Highlight = true
+			searchView.Wrap = false
+			searchView.Editable = true
+
+			utils.ErrCheck(gui.SetKeybinding(searchView.Name(), KeyEnter, ModNone, func(gui *Gui, v *View) error {
+
+				list := mngr.Lists[mngr.currListIdx]
+				cards, err := list.Cards()
+				utils.ErrCheck(err)
+
+				listView.Clear()
+				for idx, card := range cards {
+					if strings.Contains(card.Name, v.Buffer()[:len(v.Buffer())-2]) {
+						fmt.Fprintf(listView, "%d.%v\n", idx, card.Name)
+					}
+				}
+
+				gui.DeleteKeybindings(SEARCH_VIEW)
+				utils.ErrCheck(gui.DeleteView(SEARCH_VIEW))
+				return nil
+			}))
+			utils.ErrCheck(mngr.SelectView(gui, SEARCH_VIEW))
+		}
+
+		return nil
+	})
+	return nil
 }
 
 func addCardDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
