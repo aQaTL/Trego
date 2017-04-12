@@ -47,19 +47,47 @@ func addCardSearchingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 			searchView.Wrap = false
 			searchView.Editable = true
 
-			utils.ErrCheck(gui.SetKeybinding(searchView.Name(), KeyEnter, ModNone, func(gui *Gui, v *View) error {
+			list := mngr.Lists[mngr.currListIdx]
+			cards, err := list.Cards()
+			utils.ErrCheck(err)
 
-				list := mngr.Lists[mngr.currListIdx]
-				cards, err := list.Cards()
-				utils.ErrCheck(err)
-
-				listView.Clear()
-				for idx, card := range cards {
-					if strings.Contains(card.Name, v.Buffer()[:len(v.Buffer())-2]) {
-						fmt.Fprintf(listView, "%d.%v\n", idx, card.Name)
+			searchView.Editor = EditorFunc(func(v *View, key Key, ch rune, mod Modifier) {
+				switch {
+				case ch != 0 && mod == 0:
+					v.EditWrite(ch)
+				case key == KeySpace:
+					v.EditWrite(' ')
+				case key == KeyBackspace || key == KeyBackspace2:
+					v.EditDelete(true)
+				case key == KeyDelete:
+					v.EditDelete(false)
+				case key == KeyInsert:
+					v.Overwrite = !v.Overwrite
+					return
+				case key == KeyArrowDown:
+					v.MoveCursor(0, 1, false)
+					return
+				case key == KeyArrowUp:
+					v.MoveCursor(0, -1, false)
+					return
+				case key == KeyArrowLeft:
+					v.MoveCursor(-1, 0, false)
+					return
+				case key == KeyArrowRight:
+					v.MoveCursor(1, 0, false)
+					return
+				}
+				if len(v.Buffer()) != 0 {
+					listView.Clear()
+					for idx, card := range cards {
+						if strings.Contains(card.Name, v.Buffer()[:len(v.Buffer())-2]) {
+							fmt.Fprintf(listView, "%d.%v\n", idx, card.Name)
+						}
 					}
 				}
+			})
 
+			utils.ErrCheck(gui.SetKeybinding(searchView.Name(), KeyEnter, ModNone, func(gui *Gui, v *View) error {
 				gui.DeleteKeybindings(SEARCH_VIEW)
 				utils.ErrCheck(gui.DeleteView(SEARCH_VIEW))
 				return nil
@@ -69,7 +97,7 @@ func addCardSearchingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 
 		return nil
 	})
-	return nil
+	return nil //Refactor refactor refactor refactor refactor
 }
 
 func addCardDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
