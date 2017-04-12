@@ -33,7 +33,7 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 	return
 }
 func addCardSearchingFunc(gui *Gui, listName string, mngr *TregoManager) error {
-	gui.SetKeybinding(listName, 's', ModNone, func(gui *Gui, listView *View) error {
+	return gui.SetKeybinding(listName, 's', ModNone, func(gui *Gui, listView *View) error {
 
 		x1, _, x2, _, err1 := gui.ViewPosition(listName)
 		_, y1, _, _, err2 := gui.ViewPosition(BOTTOM_BAR)
@@ -97,7 +97,6 @@ func addCardSearchingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 
 		return nil
 	})
-	return nil //Refactor refactor refactor refactor refactor
 }
 
 func addCardDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
