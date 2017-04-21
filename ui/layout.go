@@ -42,7 +42,7 @@ func (mngr *TregoManager) Layout(gui *Gui) error {
 
 func AddList(gui *Gui, list trello.List, index, offset int) error {
 	_, maxY := gui.Size()
-	if v, err := gui.SetView(list.Name,
+	if v, err := gui.SetView(list.Id,
 		(index+offset)*LIST_WIDTH+int(math.Abs(sign(index))), 3,
 		(index+offset)*LIST_WIDTH+LIST_WIDTH, maxY-5);
 			err != nil {

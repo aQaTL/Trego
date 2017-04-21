@@ -21,15 +21,15 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 
 	for _, list := range mngr.Lists {
 		utils.ErrCheck(
-			gui.SetKeybinding(list.Name, KeyArrowUp, ModNone, utils.CursorUp),
-			gui.SetKeybinding(list.Name, KeyArrowDown, ModNone, utils.CursorDown),
-			addListSwitchingFunc(gui, list.Name, mngr),
-			addListAddingFunc(gui, list.Name, mngr),
-			addCardAddingFunc(gui, list.Name, mngr),
-			addCardMovingFunc(gui, list.Name, mngr),
-			addDeletingFunc(gui, list.Name, mngr),
-			addBoardSwitchingFunc(gui, list.Name, mngr),
-			addCardSearchingFunc(gui, list.Name, mngr),
+			gui.SetKeybinding(list.Id, KeyArrowUp, ModNone, utils.CursorUp),
+			gui.SetKeybinding(list.Id, KeyArrowDown, ModNone, utils.CursorDown),
+			addListSwitchingFunc(gui, list.Id, mngr),
+			addListAddingFunc(gui, list.Id, mngr),
+			addCardAddingFunc(gui, list.Id, mngr),
+			addCardMovingFunc(gui, list.Id, mngr),
+			addDeletingFunc(gui, list.Id, mngr),
+			addBoardSwitchingFunc(gui, list.Id, mngr),
+			addCardSearchingFunc(gui, list.Id, mngr),
 		)
 	}
 	return
@@ -138,7 +138,7 @@ func addDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 			}
 
 			gui.Execute(func(gui *Gui) error {
-				utils.ErrCheck(gui.DeleteView(currList.Name))
+				utils.ErrCheck(gui.DeleteView(currList.Id))
 				return nil
 			})
 			SetKeyBindings(gui, mngr)
@@ -183,8 +183,8 @@ func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 				log.Printf("Card %v moved to list: %v", movedCard.Name, mngr.Lists[listIdx].Name)
 				gui.Execute(func(gui *Gui) error {
 					utils.ErrCheck(
-						gui.DeleteView(mngr.Lists[listIdx].Name),
-						gui.DeleteView(mngr.Lists[mngr.currListIdx].Name)) //Forces view update
+						gui.DeleteView(mngr.Lists[listIdx].Id),
+						gui.DeleteView(mngr.Lists[mngr.currListIdx].Id)) //Forces view update
 					return nil
 				})
 			}
@@ -201,9 +201,9 @@ func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err error) {
 	switchListRight := func(gui *Gui, v *View) (err error) {
 		mngr.currListIdx = (mngr.currListIdx + 1) % len(mngr.Lists)
-		nextViewName := mngr.Lists[mngr.currListIdx].Name
+		nextViewId := mngr.Lists[mngr.currListIdx].Id
 
-		_, _, x2, _, err := gui.ViewPosition(nextViewName)
+		_, _, x2, _, err := gui.ViewPosition(nextViewId)
 		w, _ := gui.Size()
 		if x2 > w {
 			mngr.listViewOffset -= 1
@@ -211,7 +211,7 @@ func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err er
 			mngr.listViewOffset = 0
 		}
 
-		err = mngr.SelectView(gui, nextViewName)
+		err = mngr.SelectView(gui, nextViewId)
 		return
 	}
 	switchListLeft := func(gui *Gui, v *View) (err error) {
@@ -219,9 +219,9 @@ func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err er
 			mngr.currListIdx = len(mngr.Lists)
 		}
 		mngr.currListIdx--
-		previousViewName := mngr.Lists[mngr.currListIdx%len(mngr.Lists)].Name
+		previousViewId := mngr.Lists[mngr.currListIdx%len(mngr.Lists)].Id
 
-		x1, _, _, _, err := gui.ViewPosition(previousViewName)
+		x1, _, _, _, err := gui.ViewPosition(previousViewId)
 		if x1 < 0 {
 			mngr.listViewOffset += 1
 		} else if mngr.currListIdx == len(mngr.Lists)-1 {
@@ -231,7 +231,7 @@ func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err er
 			}
 		}
 
-		return mngr.SelectView(gui, previousViewName)
+		return mngr.SelectView(gui, previousViewId)
 	}
 
 	gui.SetKeybinding(viewName, KeyTab, ModNone, switchListRight)
@@ -269,7 +269,7 @@ func addCardAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 				log.Printf("Successfully added new card: %v", card.Name)
 
 				gui.Execute(func(gui *Gui) error {
-					utils.ErrCheck(gui.DeleteView(list.Name)) //Forces view update
+					utils.ErrCheck(gui.DeleteView(list.Id)) //Forces view update
 					return nil
 				})
 			}
@@ -307,7 +307,7 @@ func addListAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 				mngr.Lists = append(mngr.Lists, *list)
 				gui.Execute(func(gui *Gui) error {
 					utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1, mngr.listViewOffset))
-					mngr.SelectView(gui, list.Name)
+					mngr.SelectView(gui, list.Id)
 					mngr.currListIdx = len(mngr.Lists) - 1
 					return nil
 				})
@@ -347,7 +347,7 @@ func addBoardSwitchingFunc(gui *Gui, listName string, mngr *TregoManager) error 
 				log.Printf("Changing board to: %v", mngr.CurrBoard.Name)
 
 				for _, list := range mngr.Lists {
-					utils.ErrCheck(gui.DeleteView(list.Name))
+					utils.ErrCheck(gui.DeleteView(list.Id))
 				}
 				utils.ErrCheck(gui.DeleteView(TOP_BAR))
 				mngr.Lists = conn.Lists(mngr.CurrBoard)

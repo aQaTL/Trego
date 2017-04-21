@@ -28,7 +28,7 @@ func (mngr *TregoManager) SelectView(gui *gocui.Gui, viewName string) error {
 func (mngr *TregoManager) CheckCurrView(gui *gocui.Gui, replacementViewName string) {
 	if mngr.currView == nil {
 		if len(mngr.Lists) > 0 {
-			utils.ErrCheck(mngr.SelectView(gui, mngr.Lists[mngr.currListIdx].Name))
+			utils.ErrCheck(mngr.SelectView(gui, mngr.Lists[mngr.currListIdx].Id))
 		} else {
 			utils.ErrCheck(mngr.SelectView(gui, replacementViewName))
 		}
