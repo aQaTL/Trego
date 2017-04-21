@@ -177,7 +177,9 @@ func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 				cards, err := mngr.Lists[mngr.currListIdx].Cards()
 				utils.ErrCheck(err)
 
-				movedCard, err := cards[cardIdx].Move(mngr.Lists[listIdx])
+				movedCard, err := cards[cardIdx].MoveToList(mngr.Lists[listIdx])
+				utils.ErrCheck(err)
+				movedCard, err = movedCard.Move("bottom")
 				utils.ErrCheck(err)
 
 				log.Printf("Card %v moved to list: %v", movedCard.Name, mngr.Lists[listIdx].Name)
