@@ -1,6 +1,9 @@
 package utils
 
-import "log"
+import (
+	"log"
+	"github.com/aqatl/go-trello"
+)
 
 func ErrCheck(errs ...error) {
 	for _, err := range errs {
@@ -8,4 +11,9 @@ func ErrCheck(errs ...error) {
 			log.Panicln(err)
 		}
 	}
+}
+
+func RemoveList(lists []trello.List, idx int) []trello.List {
+	copy(lists[idx:], lists[idx+1:])
+	return lists[:len(lists)-1]
 }

@@ -17,6 +17,8 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 		return
 	}
 
+	utils.ErrCheck(addListAddingFunc(gui, TOP_BAR, mngr))
+
 	for _, list := range mngr.Lists {
 		utils.ErrCheck(
 			gui.SetKeybinding(list.Name, KeyArrowUp, ModNone, utils.CursorUp),
@@ -25,7 +27,7 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 			addListAddingFunc(gui, list.Name, mngr),
 			addCardAddingFunc(gui, list.Name, mngr),
 			addCardMovingFunc(gui, list.Name, mngr),
-			addCardDeletingFunc(gui, list.Name, mngr),
+			addDeletingFunc(gui, list.Name, mngr),
 			addBoardSwitchingFunc(gui, list.Name, mngr),
 			addCardSearchingFunc(gui, list.Name, mngr),
 		)
@@ -99,7 +101,7 @@ func addCardSearchingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 	})
 }
 
-func addCardDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
+func addDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, 'd', ModNone, func(gui *Gui, view *View) error {
 		delModeC := make(chan int)
 		utils.DelNonGlobalKeyBinds(gui)
@@ -111,25 +113,32 @@ func addCardDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 					"Choose action",
 					gui,
 					delModeC,
-					[]string{"Archive", "Delete"}).
+					[]string{"Archive", "Delete", "Archive list"}).
 						Name()))
 
 		go func() {
+			currList := mngr.Lists[mngr.currListIdx]
 			if delMode, ok := <-delModeC; ok {
-				cards, err := mngr.Lists[mngr.currListIdx].Cards()
+				cards, err := currList.Cards()
 				utils.ErrCheck(err)
 				cardIdx := SelectedItemIdx(view)
-				if delMode == 0 { //Archive
+				if delMode == 0 && cardIdx >= 0 { //Archive
 					utils.ErrCheck(cards[cardIdx].Archive(true))
 					log.Printf("Card %v archived successfully", cards[cardIdx].Name)
-				} else if delMode == 1 { //Delete
+				} else if delMode == 1 && cardIdx >= 0 { //Delete
 					utils.ErrCheck(cards[cardIdx].Delete())
 					log.Printf("Card %v deleted successfully", cards[cardIdx].Name)
+				} else if delMode == 2 { //Archive list
+					utils.ErrCheck(currList.Archive(true))
+					log.Printf("List %v archived successfully", currList.Name)
+					mngr.Lists = utils.RemoveList(mngr.Lists, mngr.currListIdx)
+					mngr.currListIdx = 0
+					mngr.listViewOffset = 0
 				}
 			}
 
 			gui.Execute(func(gui *Gui) error {
-				utils.ErrCheck(gui.DeleteView(mngr.Lists[mngr.currListIdx].Name))
+				utils.ErrCheck(gui.DeleteView(currList.Name))
 				return nil
 			})
 			SetKeyBindings(gui, mngr)
@@ -296,7 +305,12 @@ func addListAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 				}
 
 				mngr.Lists = append(mngr.Lists, *list)
-				utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1, mngr.listViewOffset))
+				gui.Execute(func(gui *Gui) error {
+					utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1, mngr.listViewOffset))
+					mngr.SelectView(gui, list.Name)
+					mngr.currListIdx = len(mngr.Lists) - 1
+					return nil
+				})
 			}
 
 			SetKeyBindings(gui, mngr)
