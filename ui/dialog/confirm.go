@@ -1,8 +1,8 @@
 package dialog
 
 import (
-	"github.com/jroimartin/gocui"
 	"github.com/aqatl/Trego/utils"
+	"github.com/jroimartin/gocui"
 )
 
 //Provides option dialog. User can make decision with 'y' and 'n' key.

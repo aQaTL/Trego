@@ -1,9 +1,9 @@
 package dialog
 
 import (
-	"github.com/jroimartin/gocui"
-	"github.com/aqatl/Trego/utils"
 	"fmt"
+	"github.com/aqatl/Trego/utils"
+	"github.com/jroimartin/gocui"
 	"strings"
 )
 

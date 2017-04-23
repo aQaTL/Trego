@@ -1,10 +1,10 @@
 package main
 
 import (
-	. "github.com/jroimartin/gocui"
-	"log"
 	"github.com/aqatl/Trego/conn"
 	"github.com/aqatl/Trego/ui"
+	. "github.com/jroimartin/gocui"
+	"log"
 )
 
 func main() {

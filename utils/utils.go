@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"log"
 	"github.com/aqatl/go-trello"
+	"log"
 )
 
 func ErrCheck(errs ...error) {

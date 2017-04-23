@@ -1,11 +1,11 @@
 package ui
 
 import (
-	. "github.com/jroimartin/gocui"
-	"github.com/fatih/color"
-	"math"
-	"github.com/aqatl/go-trello"
 	"github.com/aqatl/Trego/utils"
+	"github.com/aqatl/go-trello"
+	"github.com/fatih/color"
+	. "github.com/jroimartin/gocui"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -15,6 +15,10 @@ const (
 	TOP_BAR     string = "topbar"
 	SEARCH_VIEW string = "searchview"
 	LIST_WIDTH  int    = 24
+)
+
+var (
+	defaultCardColor = color.New(color.BgBlack).Add(color.FgWhite)
 )
 
 func (mngr *TregoManager) Layout(gui *Gui) error {
@@ -44,8 +48,7 @@ func AddList(gui *Gui, list trello.List, index, offset int) error {
 	_, maxY := gui.Size()
 	if v, err := gui.SetView(list.Id,
 		(index+offset)*LIST_WIDTH+int(math.Abs(sign(index))), 3,
-		(index+offset)*LIST_WIDTH+LIST_WIDTH, maxY-5);
-			err != nil {
+		(index+offset)*LIST_WIDTH+LIST_WIDTH, maxY-5); err != nil {
 
 		if err != ErrUnknownView {
 			return err
@@ -67,8 +70,9 @@ func AddList(gui *Gui, list trello.List, index, offset int) error {
 		if err != nil {
 			return err
 		}
+		v.Clear()
 		for idx, card := range cards {
-			color.New(color.BgBlack).Add(color.FgWhite).Printf("%d.%v\n", idx, card.Name)
+			defaultCardColor.Printf("%d.%v\n", idx, card.Name)
 		}
 	}
 

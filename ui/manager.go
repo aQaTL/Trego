@@ -1,9 +1,9 @@
 package ui
 
 import (
+	"github.com/aqatl/Trego/utils"
 	"github.com/aqatl/go-trello"
 	"github.com/jroimartin/gocui"
-	"github.com/aqatl/Trego/utils"
 )
 
 type TregoManager struct {

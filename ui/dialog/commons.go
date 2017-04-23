@@ -45,16 +45,16 @@
 
 	Remember! When user chooses an option, it deletes returned view, so make sure
 	to handle it properly. If you don't, it may cause Unknown view error
- */
+*/
 package dialog
 
 import (
-	"github.com/jroimartin/gocui"
 	"fmt"
-	"strings"
-	"math"
-	"io"
 	"github.com/aqatl/Trego/utils"
+	"github.com/jroimartin/gocui"
+	"io"
+	"math"
+	"strings"
 )
 
 const (

@@ -1,15 +1,17 @@
 package ui
 
 import (
-	. "github.com/jroimartin/gocui"
-	"github.com/aqatl/go-trello"
-	"github.com/aqatl/Trego/utils"
+	"fmt"
+	"github.com/aqatl/Trego/conn"
 	"github.com/aqatl/Trego/ui/dialog"
+	"github.com/aqatl/Trego/utils"
+	"github.com/aqatl/go-trello"
+	"github.com/fatih/color"
+	. "github.com/jroimartin/gocui"
 	"log"
 	"math"
-	"github.com/aqatl/Trego/conn"
+	"regexp"
 	"strings"
-	"fmt"
 )
 
 func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
@@ -17,24 +19,26 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 		return
 	}
 
-	utils.ErrCheck(addListAddingFunc(gui, TOP_BAR, mngr))
+	utils.ErrCheck(addListAdding(gui, TOP_BAR, mngr))
 
 	for _, list := range mngr.Lists {
 		utils.ErrCheck(
 			gui.SetKeybinding(list.Id, KeyArrowUp, ModNone, utils.CursorUp),
 			gui.SetKeybinding(list.Id, KeyArrowDown, ModNone, utils.CursorDown),
-			addListSwitchingFunc(gui, list.Id, mngr),
-			addListAddingFunc(gui, list.Id, mngr),
-			addCardAddingFunc(gui, list.Id, mngr),
-			addCardMovingFunc(gui, list.Id, mngr),
-			addDeletingFunc(gui, list.Id, mngr),
-			addBoardSwitchingFunc(gui, list.Id, mngr),
-			addCardSearchingFunc(gui, list.Id, mngr),
+			addListSwitching(gui, list.Id, mngr),
+			addListAdding(gui, list.Id, mngr),
+			addCardAdding(gui, list.Id, mngr),
+			addCardToListMoving(gui, list.Id, mngr),
+			addDeleting(gui, list.Id, mngr),
+			addBoardSwitching(gui, list.Id, mngr),
+			addCardSearching(gui, list.Id, mngr),
+			addCardMoving(gui, list.Id, mngr),
 		)
 	}
 	return
 }
-func addCardSearchingFunc(gui *Gui, listName string, mngr *TregoManager) error {
+
+func addCardSearching(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, 's', ModNone, func(gui *Gui, listView *View) error {
 
 		x1, _, x2, _, err1 := gui.ViewPosition(listName)
@@ -101,7 +105,7 @@ func addCardSearchingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 	})
 }
 
-func addDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
+func addDeleting(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, 'd', ModNone, func(gui *Gui, view *View) error {
 		delModeC := make(chan int)
 		utils.DelNonGlobalKeyBinds(gui)
@@ -147,7 +151,89 @@ func addDeletingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 	})
 }
 
-func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
+func addCardMoving(gui *Gui, listName string, mngr *TregoManager) error {
+	idxRe := regexp.MustCompile(`^(\d+\.)`)
+
+	move := func(cardIdx, pos int, mngr *TregoManager) {
+		cards, err := mngr.Lists[mngr.currListIdx].Cards()
+		utils.ErrCheck(err)
+
+		log.Printf(
+			"Moving card %v of index %d to index %v (max: %d)",
+			cards[cardIdx].Name,
+			cardIdx,
+			fmt.Sprint(pos),
+			len(cards))
+
+		_, err = cards[cardIdx].Move(fmt.Sprintf("%f", cards[pos].Pos))
+		_, err2 := cards[pos].Move(fmt.Sprintf("%f", cards[cardIdx].Pos))
+		utils.ErrCheck(err, err2)
+	}
+
+	err := gui.SetKeybinding(listName, KeyCtrlU, ModNone, func(gui *Gui, view *View) error {
+		cardIdx := SelectedItemIdx(view)
+		if cardIdx < 0 {
+			return nil
+		}
+		cards := strings.Split(view.Buffer(), "\n")
+		prevCardIdx := cardIdx - 1
+		if prevCardIdx < 0 {
+			prevCardIdx = len(cards) - 3 //Weird leading new lines
+		}
+
+		prevCardIdxMatch := idxRe.FindString(cards[prevCardIdx])
+		currCardIdxMatch := idxRe.FindString(cards[cardIdx])
+
+		cards[cardIdx], cards[prevCardIdx] =
+				idxRe.ReplaceAllString(cards[prevCardIdx], currCardIdxMatch),
+				idxRe.ReplaceAllString(cards[cardIdx], prevCardIdxMatch)
+
+		color.Output = view
+		view.Clear()
+		for _, card := range cards {
+			if card != "" {
+				defaultCardColor.Printf("%v\n", card)
+			}
+		}
+
+		go move(cardIdx, prevCardIdx, mngr)
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return gui.SetKeybinding(listName, KeyCtrlD, ModNone, func(gui *Gui, view *View) error {
+		cardIdx := SelectedItemIdx(view)
+		if cardIdx < 0 {
+			return nil
+		}
+
+		cards := strings.Split(view.Buffer(), "\n")
+		nextCardIdx := (cardIdx + 1) % (len(cards) - 2)
+
+		nextCardIdxMatch := idxRe.FindString(cards[nextCardIdx])
+		currCardIdxMatch := idxRe.FindString(cards[cardIdx])
+
+		cards[cardIdx], cards[nextCardIdx] =
+				idxRe.ReplaceAllString(cards[nextCardIdx], currCardIdxMatch),
+				idxRe.ReplaceAllString(cards[cardIdx], nextCardIdxMatch)
+
+		color.Output = view
+		view.Clear()
+		for _, card := range cards {
+			if card != "" {
+				defaultCardColor.Printf("%v\n", card)
+			}
+		}
+
+		go move(cardIdx, nextCardIdx, mngr)
+		return nil
+	})
+}
+
+func addCardToListMoving(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, 'm', ModNone, func(gui *Gui, view *View) error {
 		destListC := make(chan int)
 		for _, list := range gui.Views() {
@@ -200,7 +286,7 @@ func addCardMovingFunc(gui *Gui, listName string, mngr *TregoManager) error {
 
 //Keybinding for switching list on tab keypress
 //I used anonymous function for mngr variable access
-func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err error) {
+func addListSwitching(gui *Gui, viewName string, mngr *TregoManager) (err error) {
 	switchListRight := func(gui *Gui, v *View) (err error) {
 		mngr.currListIdx = (mngr.currListIdx + 1) % len(mngr.Lists)
 		nextViewId := mngr.Lists[mngr.currListIdx].Id
@@ -243,7 +329,7 @@ func addListSwitchingFunc(gui *Gui, viewName string, mngr *TregoManager) (err er
 	return
 }
 
-func addCardAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
+func addCardAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(viewName, 'n', ModNone, func(gui *Gui, view *View) error {
 		cardNameC := make(chan string)
 		utils.DelNonGlobalKeyBinds(gui)
@@ -281,7 +367,7 @@ func addCardAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 	})
 }
 
-func addListAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
+func addListAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(viewName, 'l', ModNone, func(gui *Gui, view *View) error {
 		viewNameC := make(chan string)
 		utils.DelNonGlobalKeyBinds(gui)
@@ -321,7 +407,7 @@ func addListAddingFunc(gui *Gui, viewName string, mngr *TregoManager) error {
 	})
 }
 
-func addBoardSwitchingFunc(gui *Gui, listName string, mngr *TregoManager) error {
+func addBoardSwitching(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, 'b', ModNone, func(gui *Gui, view *View) error {
 		boardSelC := make(chan int)
 		utils.DelNonGlobalKeyBinds(gui)

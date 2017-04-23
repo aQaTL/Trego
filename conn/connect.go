@@ -3,12 +3,12 @@
 package conn
 
 import (
-	. "github.com/aqatl/go-trello"
 	"encoding/json"
+	"github.com/aqatl/Trego/utils"
+	. "github.com/aqatl/go-trello"
+	"github.com/jroimartin/gocui"
 	"io/ioutil"
 	"log"
-	"github.com/jroimartin/gocui"
-	"github.com/aqatl/Trego/utils"
 )
 
 func Connect(gui *gocui.Gui) *Member {
@@ -44,7 +44,7 @@ func BoardByName(member *Member, boardName string) *Board {
 	if err != nil {
 		log.Panicln(err)
 	}
-	for _, board := range (boards) {
+	for _, board := range boards {
 		if board.Name == boardName {
 			return &board
 		}
