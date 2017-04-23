@@ -35,6 +35,9 @@ _testmain.go
 .idea/
 Trego.iml
 
+# Log files
+errLinux
+errWindows
 
 # My Trello tokens file
 token.json
