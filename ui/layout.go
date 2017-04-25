@@ -8,6 +8,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 const (
@@ -19,6 +20,8 @@ const (
 
 var (
 	defaultCardColor = color.New(color.BgBlack).Add(color.FgWhite)
+	yell             = color.New(color.FgYellow).Add(color.Bold).SprintFunc()
+	cyan             = color.New(color.FgCyan).Add(color.Bold).SprintFunc()
 )
 
 func (mngr *TregoManager) Layout(gui *Gui) error {
@@ -109,13 +112,18 @@ func bottomBarLayout(gui *Gui) error {
 		v.Highlight = false
 		v.BgColor = ColorBlack
 
-		color.Output = v
-		color := color.New(color.FgYellow).Add(color.Bold)
-		color.Printf("%-22s", "\xE2\x87\x84 move between lists")
-		color.Printf("%s\n", "^C exit")
-		color.Printf("%-22s", "\xE2\x87\x85 move inside list")
-		color.Printf("%s\n", "b change board")
-
+		fmt.Fprint(v,
+			cyan("\xE2\x87\x84"), yell(" change list "),
+			cyan("^C"), yell(" exit "),
+			cyan("n"), yell(" add card "),
+			cyan("l"), yell(" add list "),
+			cyan("d"), yell(" delete "),
+			cyan("s"), yell(" card search "),
+			cyan("m"), yell(" move card\n"),
+			cyan("\xE2\x87\x85"), yell(" change card "),
+			cyan("^d"), yell(" move card down "),
+			cyan("^u"), yell(" move card up "),
+			cyan("b"), yell(" change board"))
 	}
 	return nil
 }

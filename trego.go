@@ -5,6 +5,8 @@ import (
 	"github.com/aqatl/Trego/ui"
 	. "github.com/jroimartin/gocui"
 	"log"
+	"os"
+	"github.com/aqatl/Trego/utils"
 )
 
 func main() {
@@ -13,6 +15,10 @@ func main() {
 		log.Panicln(err)
 	}
 	defer gui.Close()
+
+	logF, err := os.OpenFile("log.txt", os.O_CREATE|os.O_RDWR, 0660)
+	utils.ErrCheck(err)
+	log.SetOutput(logF)
 
 	user := conn.Connect(gui)
 	board := conn.BoardByName(user, "Testing board")
