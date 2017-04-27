@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/aqatl/Trego/conn"
 	"github.com/aqatl/Trego/ui/dialog"
