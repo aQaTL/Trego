@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/aqatl/Trego/conn"
 	"github.com/aqatl/Trego/ui/dialog"
@@ -27,6 +28,7 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 			gui.SetKeybinding(list.Id, KeyArrowDown, ModNone, utils.CursorDown),
 			addListSwitching(gui, list.Id, mngr),
 			addListAdding(gui, list.Id, mngr),
+			addListMoving(gui, list.Id, mngr),
 			addCardAdding(gui, list.Id, mngr),
 			addCardToListMoving(gui, list.Id, mngr),
 			addDeleting(gui, list.Id, mngr),
@@ -154,7 +156,7 @@ func addDeleting(gui *Gui, listName string, mngr *TregoManager) error {
 func addCardMoving(gui *Gui, listName string, mngr *TregoManager) error {
 	idxRe := regexp.MustCompile(`^(\d+\.)`)
 
-	move := func(cardIdx, pos int, mngr *TregoManager) {
+	swap := func(cardIdx, pos int, mngr *TregoManager) {
 		cards, err := mngr.Lists[mngr.currListIdx].Cards()
 		utils.ErrCheck(err)
 
@@ -196,7 +198,7 @@ func addCardMoving(gui *Gui, listName string, mngr *TregoManager) error {
 			}
 		}
 
-		go move(cardIdx, prevCardIdx, mngr)
+		go swap(cardIdx, prevCardIdx, mngr)
 		return nil
 	})
 
@@ -228,7 +230,7 @@ func addCardMoving(gui *Gui, listName string, mngr *TregoManager) error {
 			}
 		}
 
-		go move(cardIdx, nextCardIdx, mngr)
+		go swap(cardIdx, nextCardIdx, mngr)
 		return nil
 	})
 }
@@ -287,46 +289,83 @@ func addCardToListMoving(gui *Gui, listName string, mngr *TregoManager) error {
 //Keybinding for switching list on tab keypress
 //I used anonymous function for mngr variable access
 func addListSwitching(gui *Gui, viewName string, mngr *TregoManager) (err error) {
-	switchListRight := func(gui *Gui, v *View) (err error) {
-		mngr.currListIdx = (mngr.currListIdx + 1) % len(mngr.Lists)
-		nextViewId := mngr.Lists[mngr.currListIdx].Id
+	utils.ErrCheck(gui.SetKeybinding(viewName, KeyTab, ModNone, mngr.SwitchListRight),
+		gui.SetKeybinding(viewName, KeyArrowRight, ModNone, mngr.SwitchListRight),
+		gui.SetKeybinding(viewName, KeyArrowLeft, ModNone, mngr.SwitchListLeft))
+	return
+}
 
-		_, _, x2, _, err := gui.ViewPosition(nextViewId)
-		w, _ := gui.Size()
-		if x2 > w {
-			mngr.listViewOffset -= 1
-		} else if mngr.currListIdx == 0 {
+func addListMoving(gui *Gui, viewName string, mngr *TregoManager) error {
+
+	queue := make(chan trello.List)
+
+	go func(queue chan trello.List) {
+		for {
+			list := <-queue
+			list.Move(fmt.Sprintf("%f", list.Pos))
+		}
+	}(queue)
+
+	err := gui.SetKeybinding(viewName, KeyCtrlN, ModNone, func(gui *Gui, view *View) error {
+		if len(mngr.Lists) < 2 {
+			return nil
+		}
+
+		currIdx := mngr.currListIdx
+		nextListIdx := (currIdx + 1) % len(mngr.Lists)
+		if nextListIdx == 0 {
+			mngr.Lists[currIdx].Pos = float32(math.Ceil(float64(mngr.Lists[1].Pos) / 2))
+		} else {
+			mngr.Lists[currIdx].Pos =
+					mngr.Lists[nextListIdx].Pos +
+							(mngr.Lists[(currIdx+2)%len(mngr.Lists)].Pos -
+									mngr.Lists[nextListIdx].Pos) / 2
+		}
+
+		queue <- mngr.Lists[currIdx]
+
+		mngr.Lists[currIdx], mngr.Lists[nextListIdx] =
+				mngr.Lists[nextListIdx], mngr.Lists[currIdx]
+		utils.ErrCheck(mngr.SwitchListRight(gui, view))
+		if nextListIdx == 0 {
 			mngr.listViewOffset = 0
 		}
 
-		err = mngr.SelectView(gui, nextViewId)
-		return
-	}
-	switchListLeft := func(gui *Gui, v *View) (err error) {
-		if mngr.currListIdx == 0 {
-			mngr.currListIdx = len(mngr.Lists)
-		}
-		mngr.currListIdx--
-		previousViewId := mngr.Lists[mngr.currListIdx%len(mngr.Lists)].Id
+		return nil
+	})
 
-		x1, _, _, _, err := gui.ViewPosition(previousViewId)
-		if x1 < 0 {
-			mngr.listViewOffset += 1
-		} else if mngr.currListIdx == len(mngr.Lists)-1 {
-			//Scrolls board to the end
-			for mngr.currListIdx = 0; mngr.currListIdx != len(mngr.Lists)-1; {
-				utils.ErrCheck(switchListRight(gui, mngr.currView))
-			}
-		}
-
-		return mngr.SelectView(gui, previousViewId)
+	if err != nil {
+		return err
 	}
 
-	gui.SetKeybinding(viewName, KeyTab, ModNone, switchListRight)
-	gui.SetKeybinding(viewName, KeyArrowRight, ModNone, switchListRight)
-	gui.SetKeybinding(viewName, KeyArrowLeft, ModNone, switchListLeft)
+	return gui.SetKeybinding(viewName, KeyCtrlP, ModNone, func(gui *Gui, view *View) error {
+		if len(mngr.Lists) < 2 {
+			return nil
+		}
+		prevListIdx := mngr.currListIdx - 1
+		if prevListIdx < 0 {
+			prevListIdx = len(mngr.Lists) - 1
+		}
 
-	return
+		currIdx := mngr.currListIdx
+		if prevListIdx == len(mngr.Lists)-1 {
+			mngr.Lists[currIdx].Pos = mngr.Lists[prevListIdx].Pos + (1 << 16)
+		} else if prevListIdx == 0 {
+			mngr.Lists[currIdx].Pos = mngr.Lists[prevListIdx].Pos / 2
+		} else {
+			mngr.Lists[currIdx].Pos =
+					mngr.Lists[prevListIdx].Pos -
+							(mngr.Lists[prevListIdx].Pos-mngr.Lists[currIdx-2].Pos)/2
+		}
+
+		queue <- mngr.Lists[currIdx]
+
+		mngr.Lists[currIdx], mngr.Lists[prevListIdx] =
+				mngr.Lists[prevListIdx], mngr.Lists[currIdx]
+		utils.ErrCheck(mngr.SwitchListLeft(gui, view))
+
+		return nil
+	})
 }
 
 func addCardAdding(gui *Gui, viewName string, mngr *TregoManager) error {
