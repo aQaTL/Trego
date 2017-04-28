@@ -10,7 +10,6 @@ import (
 	. "github.com/jroimartin/gocui"
 	"log"
 	"math"
-	"regexp"
 	"strings"
 )
 
@@ -38,8 +37,10 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 
 		gui.SetKeybinding(list.Id, 'q', ModNone, func(gui *Gui, view *View) error {
 			log.Print("=========")
-			for _, list := range mngr.Lists {
-				log.Printf("%v: %f", list.Name, list.Pos)
+			cards, err := mngr.Lists[mngr.currListIdx].FreshCards()
+			utils.ErrCheck(err)
+			for _, card := range cards {
+				log.Printf("%v: %f", card.Name, card.Pos)
 			}
 			return nil
 		})
@@ -161,51 +162,54 @@ func addDeleting(gui *Gui, listName string, mngr *TregoManager) error {
 }
 
 func addCardMoving(gui *Gui, listName string, mngr *TregoManager) error {
-	idxRe := regexp.MustCompile(`^(\d+\.)`)
-
-	swap := func(cardIdx, pos int, mngr *TregoManager) {
-		cards, err := mngr.Lists[mngr.currListIdx].Cards()
-		utils.ErrCheck(err)
-
-		log.Printf(
-			"Moving card %v of index %d to index %v (max: %d)",
-			cards[cardIdx].Name,
-			cardIdx,
-			fmt.Sprint(pos),
-			len(cards))
-
-		_, err = cards[cardIdx].Move(fmt.Sprintf("%f", cards[pos].Pos))
-		_, err2 := cards[pos].Move(fmt.Sprintf("%f", cards[cardIdx].Pos))
-		utils.ErrCheck(err, err2)
-	}
+	queue := make(chan trello.Card)
+	go func(queue chan trello.Card) {
+		for {
+			card := <-queue
+			_, err := card.Move(fmt.Sprintf("%f", card.Pos))
+			utils.ErrCheck(err)
+		}
+	}(queue)
 
 	err := gui.SetKeybinding(listName, KeyCtrlU, ModNone, func(gui *Gui, view *View) error {
 		cardIdx := SelectedItemIdx(view)
-		if cardIdx < 0 {
+		cards, err := mngr.Lists[mngr.currListIdx].Cards()
+		utils.ErrCheck(err)
+
+		if cardIdx < 0 || len(cards) < 2 {
 			return nil
 		}
-		cards := strings.Split(view.Buffer(), "\n")
 		prevCardIdx := cardIdx - 1
 		if prevCardIdx < 0 {
-			prevCardIdx = len(cards) - 3 //Weird leading new lines
+			prevCardIdx = len(cards) - 1
 		}
 
-		prevCardIdxMatch := idxRe.FindString(cards[prevCardIdx])
-		currCardIdxMatch := idxRe.FindString(cards[cardIdx])
+		if prevCardIdx == len(cards)-1 {
+			cards[cardIdx].Pos = cards[prevCardIdx].Pos + (1 << 16)
 
-		cards[cardIdx], cards[prevCardIdx] =
-				idxRe.ReplaceAllString(cards[prevCardIdx], currCardIdxMatch),
-				idxRe.ReplaceAllString(cards[cardIdx], prevCardIdxMatch)
+			currCard := cards[cardIdx]
+			copy(cards, cards[1:])
+			cards[prevCardIdx] = currCard
+		} else if prevCardIdx == 0 {
+			cards[cardIdx].Pos = cards[0].Pos / 2
+
+			cards[cardIdx], cards[prevCardIdx] = cards[prevCardIdx], cards[cardIdx]
+		} else {
+			cards[cardIdx].Pos =
+					cards[prevCardIdx].Pos -
+							(cards[prevCardIdx].Pos-cards[cardIdx-2].Pos)/2
+
+			cards[cardIdx], cards[prevCardIdx] = cards[prevCardIdx], cards[cardIdx]
+		}
+
+		queue <- cards[prevCardIdx]
 
 		color.Output = view
 		view.Clear()
-		for _, card := range cards {
-			if card != "" {
-				defaultCardColor.Printf("%v\n", card)
-			}
+		for idx, card := range cards {
+			defaultCardColor.Printf("%d.%v\n", idx, card.Name)
 		}
 
-		go swap(cardIdx, prevCardIdx, mngr)
 		return nil
 	})
 
@@ -215,29 +219,40 @@ func addCardMoving(gui *Gui, listName string, mngr *TregoManager) error {
 
 	return gui.SetKeybinding(listName, KeyCtrlD, ModNone, func(gui *Gui, view *View) error {
 		cardIdx := SelectedItemIdx(view)
-		if cardIdx < 0 {
+		cards, err := mngr.Lists[mngr.currListIdx].Cards()
+		utils.ErrCheck(err)
+
+		if cardIdx < 0 || len(cards) < 2 {
 			return nil
 		}
+		nextCardIdx := (cardIdx + 1) % len(cards)
 
-		cards := strings.Split(view.Buffer(), "\n")
-		nextCardIdx := (cardIdx + 1) % (len(cards) - 2)
+		if nextCardIdx == 0 {
+			cards[cardIdx].Pos = math.Ceil(cards[0].Pos / 2)
 
-		nextCardIdxMatch := idxRe.FindString(cards[nextCardIdx])
-		currCardIdxMatch := idxRe.FindString(cards[cardIdx])
+			currCard := cards[cardIdx]
+			copy(cards[1:], cards[:len(cards)-1])
+			cards[0] = currCard
+		} else if nextCardIdx == len(cards)-1 {
+			cards[cardIdx].Pos = cards[nextCardIdx].Pos + (1 << 16)
 
-		cards[cardIdx], cards[nextCardIdx] =
-				idxRe.ReplaceAllString(cards[nextCardIdx], currCardIdxMatch),
-				idxRe.ReplaceAllString(cards[cardIdx], nextCardIdxMatch)
+			cards[cardIdx], cards[nextCardIdx] = cards[nextCardIdx], cards[cardIdx]
+		} else {
+			cards[cardIdx].Pos =
+					cards[nextCardIdx].Pos +
+							(cards[cardIdx+2%len(cards)].Pos -
+									cards[nextCardIdx].Pos) / 2
+
+			cards[cardIdx], cards[nextCardIdx] = cards[nextCardIdx], cards[cardIdx]
+		}
+
+		queue <- cards[nextCardIdx]
 
 		color.Output = view
 		view.Clear()
-		for _, card := range cards {
-			if card != "" {
-				defaultCardColor.Printf("%v\n", card)
-			}
+		for idx, card := range cards {
+			defaultCardColor.Printf("%d.%v\n", idx, card.Name)
 		}
-
-		go swap(cardIdx, nextCardIdx, mngr)
 		return nil
 	})
 }
@@ -319,7 +334,7 @@ func addListMoving(gui *Gui, viewName string, mngr *TregoManager) error {
 		currIdx := mngr.currListIdx
 		nextListIdx := (currIdx + 1) % len(mngr.Lists)
 		if nextListIdx == 0 {
-			mngr.Lists[currIdx].Pos = float32(math.Ceil(float64(mngr.Lists[1].Pos) / 2))
+			mngr.Lists[currIdx].Pos = float32(math.Ceil(float64(mngr.Lists[0].Pos) / 2))
 
 			currList := mngr.Lists[currIdx]
 			copy(mngr.Lists[1:], mngr.Lists[:len(mngr.Lists)-1])
