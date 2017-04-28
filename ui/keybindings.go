@@ -35,6 +35,14 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 			addCardSearching(gui, list.Id, mngr),
 			addCardMoving(gui, list.Id, mngr),
 		)
+
+		gui.SetKeybinding(list.Id, 'q', ModNone, func(gui *Gui, view *View) error {
+			log.Print("=========")
+			for _, list := range mngr.Lists {
+				log.Printf("%v: %f", list.Name, list.Pos)
+			}
+			return nil
+		})
 	}
 	return
 }
@@ -295,9 +303,7 @@ func addListSwitching(gui *Gui, viewName string, mngr *TregoManager) (err error)
 }
 
 func addListMoving(gui *Gui, viewName string, mngr *TregoManager) error {
-
 	queue := make(chan trello.List)
-
 	go func(queue chan trello.List) {
 		for {
 			list := <-queue
@@ -314,17 +320,27 @@ func addListMoving(gui *Gui, viewName string, mngr *TregoManager) error {
 		nextListIdx := (currIdx + 1) % len(mngr.Lists)
 		if nextListIdx == 0 {
 			mngr.Lists[currIdx].Pos = float32(math.Ceil(float64(mngr.Lists[1].Pos) / 2))
+
+			currList := mngr.Lists[currIdx]
+			copy(mngr.Lists[1:], mngr.Lists[:len(mngr.Lists)-1])
+			mngr.Lists[0] = currList
+		} else if nextListIdx == len(mngr.Lists)-1 {
+			mngr.Lists[currIdx].Pos = mngr.Lists[nextListIdx].Pos + (1 << 16)
+
+			mngr.Lists[currIdx], mngr.Lists[nextListIdx] =
+					mngr.Lists[nextListIdx], mngr.Lists[currIdx]
 		} else {
 			mngr.Lists[currIdx].Pos =
 					mngr.Lists[nextListIdx].Pos +
 							(mngr.Lists[(currIdx+2)%len(mngr.Lists)].Pos -
 									mngr.Lists[nextListIdx].Pos) / 2
+
+			mngr.Lists[currIdx], mngr.Lists[nextListIdx] =
+					mngr.Lists[nextListIdx], mngr.Lists[currIdx]
 		}
 
-		queue <- mngr.Lists[currIdx]
+		queue <- mngr.Lists[nextListIdx]
 
-		mngr.Lists[currIdx], mngr.Lists[nextListIdx] =
-				mngr.Lists[nextListIdx], mngr.Lists[currIdx]
 		utils.ErrCheck(mngr.SwitchListRight(gui, view))
 		if nextListIdx == 0 {
 			mngr.listViewOffset = 0
@@ -349,19 +365,27 @@ func addListMoving(gui *Gui, viewName string, mngr *TregoManager) error {
 		currIdx := mngr.currListIdx
 		if prevListIdx == len(mngr.Lists)-1 {
 			mngr.Lists[currIdx].Pos = mngr.Lists[prevListIdx].Pos + (1 << 16)
+
+			currList := mngr.Lists[currIdx]
+			copy(mngr.Lists, mngr.Lists[1:])
+			mngr.Lists[prevListIdx] = currList
 		} else if prevListIdx == 0 {
 			mngr.Lists[currIdx].Pos = mngr.Lists[prevListIdx].Pos / 2
+
+			mngr.Lists[currIdx], mngr.Lists[prevListIdx] =
+					mngr.Lists[prevListIdx], mngr.Lists[currIdx]
 		} else {
 			mngr.Lists[currIdx].Pos =
 					mngr.Lists[prevListIdx].Pos -
 							(mngr.Lists[prevListIdx].Pos-mngr.Lists[currIdx-2].Pos)/2
+
+			mngr.Lists[currIdx], mngr.Lists[prevListIdx] =
+					mngr.Lists[prevListIdx], mngr.Lists[currIdx]
 		}
 
-		queue <- mngr.Lists[currIdx]
+		queue <- mngr.Lists[prevListIdx]
 
-		mngr.Lists[currIdx], mngr.Lists[prevListIdx] =
-				mngr.Lists[prevListIdx], mngr.Lists[currIdx]
-		utils.ErrCheck(mngr.SwitchListLeft(gui, view))
+		utils.ErrCheck(mngr.Layout(gui), mngr.SwitchListLeft(gui, view))
 
 		return nil
 	})
