@@ -4,7 +4,7 @@ Simple Trello console client (but with UI).
 
 ### Building
 
-I haven't published any binaries yet, so if you want to try Trego on your computer, you'll to 
+I haven't published any binaries yet, so if you want to try Trego on your computer, you'll have to 
 perform following steps:
 
 * Download and install [golang](https://golang.org/dl/)
