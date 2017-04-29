@@ -69,7 +69,7 @@ func AddList(gui *Gui, list trello.List, index, offset int) error {
 
 		color.Output = v
 
-		cards, err := list.Cards()
+		cards, err := list.FreshCards()
 		if err != nil {
 			return err
 		}
