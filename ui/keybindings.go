@@ -137,14 +137,14 @@ func addDeleting(gui *Gui, listName string, mngr *TregoManager) error {
 				utils.ErrCheck(err)
 				cardIdx := SelectedItemIdx(view)
 				if delMode == 0 && cardIdx >= 0 { //Archive
-					utils.ErrCheck(cards[cardIdx].Archive(true))
-					log.Printf("Card %v archived successfully", cards[cardIdx].Name)
+					log.Printf("Archiving card \"%v\"", cards[cardIdx].Name)
+					go utils.ErrCheck(cards[cardIdx].Archive(true))
 				} else if delMode == 1 && cardIdx >= 0 { //Delete
-					utils.ErrCheck(cards[cardIdx].Delete())
-					log.Printf("Card %v deleted successfully", cards[cardIdx].Name)
+					log.Printf("Deleting card \"%v\"", cards[cardIdx].Name)
+					go utils.ErrCheck(cards[cardIdx].Delete())
 				} else if delMode == 2 { //Archive list
-					utils.ErrCheck(currList.Archive(true))
-					log.Printf("List %v archived successfully", currList.Name)
+					log.Printf("Archiving list \"%v\"", currList.Name)
+					go utils.ErrCheck(currList.Archive(true))
 					mngr.Lists = utils.RemoveList(mngr.Lists, mngr.currListIdx)
 					mngr.currListIdx = 0
 					mngr.listViewOffset = 0

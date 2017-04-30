@@ -32,7 +32,7 @@ func (mngr *TregoManager) Layout(gui *Gui) error {
 
 	//loops through user's trello lists and adds them to gui
 	for idx, list := range mngr.Lists {
-		utils.ErrCheck(AddList(gui, list, idx, mngr.listViewOffset))
+		go utils.ErrCheck(AddList(gui, list, idx, mngr.listViewOffset))
 	}
 
 	mngr.CheckCurrView(gui, TOP_BAR)
