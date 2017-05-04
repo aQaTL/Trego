@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"fmt"
+	"log"
 )
 
 const (
@@ -30,9 +31,18 @@ func (mngr *TregoManager) Layout(gui *Gui) error {
 		topBarLayout(gui, mngr),
 	)
 
-	//loops through user's trello lists and adds them to gui
-	for idx, list := range mngr.Lists {
-		go utils.ErrCheck(AddList(gui, list, idx, mngr.listViewOffset))
+	switch mngr.Mode {
+	case BOARD_VIEW:
+		//loops through user's trello lists and adds them to gui
+		for idx, list := range mngr.Lists {
+			log.Printf("Adding view: %v", list.Name)
+			utils.ErrCheck(AddList(gui, list, idx, mngr.listViewOffset))
+		}
+	case CARD_EDITOR:
+		currView, err := gui.View(mngr.Lists[mngr.currListIdx].Id)
+		utils.ErrCheck(err)
+		cardEditorLayout(currView, gui, mngr)
+		return nil
 	}
 
 	mngr.CheckCurrView(gui, TOP_BAR)

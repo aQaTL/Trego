@@ -4,9 +4,12 @@ import (
 	"github.com/aqatl/Trego/utils"
 	"github.com/aqatl/go-trello"
 	"github.com/jroimartin/gocui"
+	"log"
 )
 
 type TregoManager struct {
+	Mode           TregoMode //Initially BOARD_VIEW
+
 	Member         *trello.Member
 	Lists          []trello.List
 	CurrBoard      *trello.Board
@@ -15,14 +18,21 @@ type TregoManager struct {
 	listViewOffset int
 }
 
+type TregoMode int
+
+const (
+	BOARD_VIEW TregoMode = iota
+	CARD_EDITOR
+)
+
 func (mngr *TregoManager) SelectView(gui *gocui.Gui, viewName string) error {
-	if view, err := gui.SetCurrentView(viewName); err == nil {
-		mngr.currView = view
-		_, err = gui.SetViewOnTop(view.Name())
-		return err
-	} else {
+	view, err := gui.SetCurrentView(viewName)
+	if err != nil {
 		return err
 	}
+	mngr.currView = view
+	_, err = gui.SetViewOnTop(view.Name())
+	return err
 }
 
 func (mngr *TregoManager) CheckCurrView(gui *gocui.Gui, replacementViewName string) {

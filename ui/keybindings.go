@@ -33,6 +33,7 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 			addBoardSwitching(gui, list.Id, mngr),
 			addCardSearching(gui, list.Id, mngr),
 			addCardMoving(gui, list.Id, mngr),
+			addCardEditing(gui, list.Id, mngr),
 		)
 
 		gui.SetKeybinding(list.Id, 'q', ModNone, func(gui *Gui, view *View) error {
@@ -484,6 +485,13 @@ func addListAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 	})
 }
 
+func addCardEditing(gui *Gui, listName string, mngr *TregoManager) error {
+	return gui.SetKeybinding(listName, KeyEnter, ModNone, func (gui *Gui, view *View) error {
+		cardEditorLayout(view, gui, mngr)
+		return nil
+	})
+}
+
 func addBoardSwitching(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, 'b', ModNone, func(gui *Gui, view *View) error {
 		boardSelC := make(chan int)
@@ -506,7 +514,7 @@ func addBoardSwitching(gui *Gui, listName string, mngr *TregoManager) error {
 					boardNames,
 				).Name()))
 
-		go func() {
+		go func(boardSelC chan int, mngr *TregoManager, gui *Gui, boards []trello.Board) {
 			if boardIdx, ok := <-boardSelC; ok {
 				mngr.CurrBoard = &boards[boardIdx]
 				log.Printf("Changing board to: %v", mngr.CurrBoard.Name)
@@ -526,7 +534,7 @@ func addBoardSwitching(gui *Gui, listName string, mngr *TregoManager) error {
 				})
 			}
 			SetKeyBindings(gui, mngr)
-		}()
+		}(boardSelC, mngr, gui, boards)
 		return nil
 	})
 }

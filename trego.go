@@ -16,7 +16,7 @@ func main() {
 	}
 	defer gui.Close()
 
-	logF, err := os.OpenFile("log.txt", os.O_CREATE|os.O_RDWR, 0660)
+	logF, err := os.OpenFile("log.txt", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
 	utils.ErrCheck(err)
 	log.SetOutput(logF)
 
