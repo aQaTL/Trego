@@ -486,7 +486,7 @@ func addListAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 }
 
 func addCardEditing(gui *Gui, listName string, mngr *TregoManager) error {
-	return gui.SetKeybinding(listName, KeyEnter, ModNone, func (gui *Gui, view *View) error {
+	return gui.SetKeybinding(listName, KeyEnter, ModNone, func(gui *Gui, view *View) error {
 		cardEditorLayout(view, gui, mngr)
 		return nil
 	})
@@ -522,14 +522,15 @@ func addBoardSwitching(gui *Gui, listName string, mngr *TregoManager) error {
 				for _, list := range mngr.Lists {
 					utils.ErrCheck(gui.DeleteView(list.Id))
 				}
-				utils.ErrCheck(gui.DeleteView(TOP_BAR))
-				mngr.Lists = conn.Lists(mngr.CurrBoard)
-				mngr.currListIdx = 0
-				mngr.listViewOffset = 0
-				mngr.currView = nil
-
 				gui.Execute(func(gui *Gui) error {
+					utils.ErrCheck(gui.DeleteView(TOP_BAR))
+					mngr.Lists = conn.Lists(mngr.CurrBoard)
+					mngr.currListIdx = 0
+					mngr.listViewOffset = 0
+					mngr.currView = nil
+
 					mngr.Layout(gui)
+					SetKeyBindings(gui, mngr)
 					return nil
 				})
 			}

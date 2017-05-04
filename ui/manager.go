@@ -4,7 +4,6 @@ import (
 	"github.com/aqatl/Trego/utils"
 	"github.com/aqatl/go-trello"
 	"github.com/jroimartin/gocui"
-	"log"
 )
 
 type TregoManager struct {
