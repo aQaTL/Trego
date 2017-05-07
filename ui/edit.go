@@ -18,7 +18,7 @@ const (
 	CARD_LIST_INFO_VIEW string = "CARD_EDITOR_VIEW_4"
 )
 
-func cardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
+func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 	mngr.Mode = CARD_EDITOR
 	cardIdx := SelectedItemIdx(listView)
 	cards, err := mngr.Lists[mngr.currListIdx].Cards()

@@ -487,7 +487,7 @@ func addListAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 
 func addCardEditing(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, KeyEnter, ModNone, func(gui *Gui, view *View) error {
-		cardEditorLayout(view, gui, mngr)
+		CardEditorLayout(view, gui, mngr)
 		return nil
 	})
 }
