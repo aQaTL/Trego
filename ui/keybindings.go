@@ -18,7 +18,7 @@ func SetKeyBindings(gui *Gui, mngr *TregoManager) (err error) {
 		return
 	}
 
-	utils.ErrCheck(addListAdding(gui, TOP_BAR, mngr))
+	utils.ErrCheck(addListAdding(gui, TopBar, mngr))
 
 	for _, list := range mngr.Lists {
 		utils.ErrCheck(
@@ -53,9 +53,9 @@ func addCardSearching(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, 's', ModNone, func(gui *Gui, listView *View) error {
 
 		x1, _, x2, _, err1 := gui.ViewPosition(listName)
-		_, y1, _, _, err2 := gui.ViewPosition(BOTTOM_BAR)
+		_, y1, _, _, err2 := gui.ViewPosition(BottomBar)
 		utils.ErrCheck(err1, err2)
-		if searchView, err := gui.SetView(SEARCH_VIEW, x1, y1-3, x2, y1-1); err != nil {
+		if searchView, err := gui.SetView(SearchView, x1, y1-3, x2, y1-1); err != nil {
 			if err != ErrUnknownView {
 				return err
 			}
@@ -105,11 +105,11 @@ func addCardSearching(gui *Gui, listName string, mngr *TregoManager) error {
 			})
 
 			utils.ErrCheck(gui.SetKeybinding(searchView.Name(), KeyEnter, ModNone, func(gui *Gui, v *View) error {
-				gui.DeleteKeybindings(SEARCH_VIEW)
-				utils.ErrCheck(gui.DeleteView(SEARCH_VIEW))
+				gui.DeleteKeybindings(SearchView)
+				utils.ErrCheck(gui.DeleteView(SearchView))
 				return nil
 			}))
-			utils.ErrCheck(mngr.SelectView(gui, SEARCH_VIEW))
+			utils.ErrCheck(mngr.SelectView(gui, SearchView))
 		}
 
 		return nil
@@ -523,7 +523,7 @@ func addBoardSwitching(gui *Gui, listName string, mngr *TregoManager) error {
 					utils.ErrCheck(gui.DeleteView(list.Id))
 				}
 				gui.Execute(func(gui *Gui) error {
-					utils.ErrCheck(gui.DeleteView(TOP_BAR))
+					utils.ErrCheck(gui.DeleteView(TopBar))
 					mngr.Lists = conn.Lists(mngr.CurrBoard)
 					mngr.currListIdx = 0
 					mngr.listViewOffset = 0

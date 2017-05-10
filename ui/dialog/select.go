@@ -10,7 +10,7 @@ func SelectDialog(title string, gui *gocui.Gui, selIdxC chan int, values []strin
 	x1, y1, x2, y2 := calcDialogBounds(0, gui)
 	y2 += len(values)
 
-	dialogView, err := setUpDialogView(gui, SELECT_DIALOG, title, x1, y1, x2, y2)
+	dialogView, err := setUpDialogView(gui, selectDialog, title, x1, y1, x2, y2)
 	utils.ErrCheck(err)
 
 	for idx, item := range values {
@@ -18,16 +18,16 @@ func SelectDialog(title string, gui *gocui.Gui, selIdxC chan int, values []strin
 	}
 
 	utils.ErrCheck(
-		gui.SetKeybinding(SELECT_DIALOG, gocui.KeyArrowDown, gocui.ModNone, utils.CursorDown),
-		gui.SetKeybinding(SELECT_DIALOG, gocui.KeyArrowUp, gocui.ModNone, utils.CursorUp))
+		gui.SetKeybinding(selectDialog, gocui.KeyArrowDown, gocui.ModNone, utils.CursorDown),
+		gui.SetKeybinding(selectDialog, gocui.KeyArrowUp, gocui.ModNone, utils.CursorUp))
 
 	utils.ErrCheck(
 		gui.SetKeybinding(
-			SELECT_DIALOG,
+			selectDialog,
 			gocui.KeyEnter,
 			gocui.ModNone,
 			func(gui *gocui.Gui, view *gocui.View) error {
-				dialogCleanUp(gui, SELECT_DIALOG)
+				dialogCleanUp(gui, selectDialog)
 				_, cy := view.Cursor()
 				selIdxC <- cy
 				close(selIdxC)
@@ -36,12 +36,12 @@ func SelectDialog(title string, gui *gocui.Gui, selIdxC chan int, values []strin
 
 	utils.ErrCheck(
 		gui.SetKeybinding(
-			SELECT_DIALOG,
+			selectDialog,
 			gocui.KeyCtrlQ,
 			gocui.ModNone,
 			func(gui *gocui.Gui, view *gocui.View) error {
 				close(selIdxC)
-				dialogCleanUp(gui, SELECT_DIALOG)
+				dialogCleanUp(gui, selectDialog)
 				return nil
 			}))
 

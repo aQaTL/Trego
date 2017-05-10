@@ -11,23 +11,23 @@ func ConfirmDialog(msg, title string, gui *gocui.Gui, choice chan bool) (view *g
 	x1, y1, x2, y2 := calcDialogBounds(msgL, gui)
 	winW := x2 - x1
 
-	confirmView, err := setUpDialogView(gui, CONFIRM_DIALOG, title, x1, y1, x2, y2)
+	confirmView, err := setUpDialogView(gui, confirmDialog, title, x1, y1, x2, y2)
 	utils.ErrCheck(err)
 	confirmView.Highlight = false
 	printCentered(confirmView, msg, winW)
 	view = confirmView
 
-	utils.ErrCheck(gui.SetKeybinding(CONFIRM_DIALOG, 'y', gocui.ModNone,
+	utils.ErrCheck(gui.SetKeybinding(confirmDialog, 'y', gocui.ModNone,
 		func(gui *gocui.Gui, view *gocui.View) (err error) {
-			dialogCleanUp(gui, CONFIRM_DIALOG)
+			dialogCleanUp(gui, confirmDialog)
 			choice <- true
 			close(choice)
 			return
 		}))
 
-	utils.ErrCheck(gui.SetKeybinding(CONFIRM_DIALOG, 'n', gocui.ModNone,
+	utils.ErrCheck(gui.SetKeybinding(confirmDialog, 'n', gocui.ModNone,
 		func(gui *gocui.Gui, view *gocui.View) (err error) {
-			dialogCleanUp(gui, CONFIRM_DIALOG)
+			dialogCleanUp(gui, confirmDialog)
 			choice <- false
 			close(choice)
 			return
@@ -35,12 +35,12 @@ func ConfirmDialog(msg, title string, gui *gocui.Gui, choice chan bool) (view *g
 
 	utils.ErrCheck(
 		gui.SetKeybinding(
-			CONFIRM_DIALOG,
+			confirmDialog,
 			gocui.KeyCtrlQ,
 			gocui.ModNone,
 			func(gui *gocui.Gui, view *gocui.View) error {
 				close(choice)
-				dialogCleanUp(gui, CONFIRM_DIALOG)
+				dialogCleanUp(gui, confirmDialog)
 				return nil
 			}))
 

@@ -11,44 +11,44 @@ import (
 )
 
 const (
-	CARD_NAME_VIEW      string = "CARD_EDITOR_VIEW_0"
-	CARD_LABELS_VIEW    string = "CARD_EDITOR_VIEW_1"
-	CARD_DESC_VIEW      string = "CARD_EDITOR_VIEW_2"
-	CARD_COMMENTS_VIEW  string = "CARD_EDITOR_VIEW_3"
-	CARD_LIST_INFO_VIEW string = "CARD_EDITOR_VIEW_4"
+	cardNameView     string = "CARD_EDITOR_VIEW_0"
+	cardLabelsView   string = "CARD_EDITOR_VIEW_1"
+	cardDescView     string = "CARD_EDITOR_VIEW_2"
+	cardCommentsView string = "CARD_EDITOR_VIEW_3"
+	cardListInfoView string = "CARD_EDITOR_VIEW_4"
 )
 
 func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
-	mngr.Mode = CARD_EDITOR
+	mngr.Mode = CardEditor
 	cardIdx := SelectedItemIdx(listView)
 	cards, err := mngr.Lists[mngr.currListIdx].Cards()
 	utils.ErrCheck(err)
 	card := cards[cardIdx]
 
 	w, h := gui.Size()
-	if cardNameView, err := gui.SetView(CARD_NAME_VIEW, 0, 3, w*2/3-1, 5); err != nil {
+	if nameView, err := gui.SetView(cardNameView, 0, 3, w*2/3-1, 5); err != nil {
 		if err != ErrUnknownView {
 			utils.ErrCheck(err)
 		}
 
-		cardNameView.Title = "Card name"
-		cardNameView.Wrap = false
-		cardNameView.Autoscroll = false
-		cardNameView.Editable = true
-		cardNameView.FgColor = ColorRed
+		nameView.Title = "Card name"
+		nameView.Wrap = false
+		nameView.Autoscroll = false
+		nameView.Editable = true
+		nameView.FgColor = ColorRed
 
-		fmt.Fprint(cardNameView, card.Name)
+		fmt.Fprint(nameView, card.Name)
 
 		utils.ErrCheck(
-			addEditorViewSwitching(gui, cardNameView, mngr),
-			addEditorClosing(gui, cardNameView, mngr),
-			addChangesSaving(gui, cardNameView, mngr, &card),
+			addEditorViewSwitching(gui, nameView, mngr),
+			addEditorClosing(gui, nameView, mngr),
+			addChangesSaving(gui, nameView, mngr, &card),
 		)
 
-		utils.ErrCheck(mngr.SelectView(gui, CARD_NAME_VIEW))
+		utils.ErrCheck(mngr.SelectView(gui, cardNameView))
 	}
 
-	if listInfoView, err := gui.SetView(CARD_LIST_INFO_VIEW, w*2/3, 3, w-1, 5); err != nil {
+	if listInfoView, err := gui.SetView(cardListInfoView, w*2/3, 3, w-1, 5); err != nil {
 		if err != ErrUnknownView {
 			utils.ErrCheck(err)
 		}
@@ -59,7 +59,7 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 		fmt.Fprint(listInfoView, yell(mngr.Lists[mngr.currListIdx].Name))
 	}
 
-	if labelsView, err := gui.SetView(CARD_LABELS_VIEW, 0, 6, w-1, 8); err != nil {
+	if labelsView, err := gui.SetView(cardLabelsView, 0, 6, w-1, 8); err != nil {
 		if err != ErrUnknownView {
 			utils.ErrCheck(err)
 		}
@@ -78,7 +78,7 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 		)
 	}
 
-	if descriptionView, err := gui.SetView(CARD_DESC_VIEW, 0, 9, int(w/3), h-5); err != nil {
+	if descriptionView, err := gui.SetView(cardDescView, 0, 9, int(w/3), h-5); err != nil {
 		if err != ErrUnknownView {
 			utils.ErrCheck(err)
 		}
@@ -96,7 +96,7 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 		)
 	}
 
-	if commentsView, err := gui.SetView(CARD_COMMENTS_VIEW, int(w/3)+1, 9, w-1, h-5); err != nil {
+	if commentsView, err := gui.SetView(cardCommentsView, int(w/3)+1, 9, w-1, h-5); err != nil {
 		if err != ErrUnknownView {
 			utils.ErrCheck(err)
 		}
@@ -140,19 +140,19 @@ func addEditorViewSwitching(gui *Gui, view *View, mngr *TregoManager) error {
 
 func addEditorClosing(gui *Gui, view *View, mngr *TregoManager) error {
 	return gui.SetKeybinding(view.Name(), KeyCtrlQ, ModNone, func(gui *Gui, view *View) error {
-		gui.DeleteKeybindings(CARD_NAME_VIEW)
-		gui.DeleteKeybindings(CARD_LIST_INFO_VIEW)
-		gui.DeleteKeybindings(CARD_LABELS_VIEW)
-		gui.DeleteKeybindings(CARD_DESC_VIEW)
-		gui.DeleteKeybindings(CARD_COMMENTS_VIEW)
+		gui.DeleteKeybindings(cardNameView)
+		gui.DeleteKeybindings(cardListInfoView)
+		gui.DeleteKeybindings(cardLabelsView)
+		gui.DeleteKeybindings(cardDescView)
+		gui.DeleteKeybindings(cardCommentsView)
 		utils.ErrCheck(
-			gui.DeleteView(CARD_NAME_VIEW),
-			gui.DeleteView(CARD_LIST_INFO_VIEW),
-			gui.DeleteView(CARD_LABELS_VIEW),
-			gui.DeleteView(CARD_DESC_VIEW),
-			gui.DeleteView(CARD_COMMENTS_VIEW),
+			gui.DeleteView(cardNameView),
+			gui.DeleteView(cardListInfoView),
+			gui.DeleteView(cardLabelsView),
+			gui.DeleteView(cardDescView),
+			gui.DeleteView(cardCommentsView),
 		)
-		mngr.Mode = BOARD_VIEW
+		mngr.Mode = BoardView
 		mngr.currView = nil
 		return nil
 	})
@@ -161,9 +161,9 @@ func addEditorClosing(gui *Gui, view *View, mngr *TregoManager) error {
 func addChangesSaving(gui *Gui, view *View, mngr *TregoManager, card *trello.Card) error {
 	return gui.SetKeybinding(view.Name(), KeyCtrlS, ModNone, func(gui *Gui, view *View) (err error) {
 		switch view.Name() {
-		case CARD_NAME_VIEW:
+		case cardNameView:
 			_, err = card.SetName(view.Buffer()[:len(view.Buffer())-2])
-		case CARD_DESC_VIEW:
+		case cardDescView:
 			_, err = card.SetDescription(view.Buffer())
 		default:
 			//Unsupported view

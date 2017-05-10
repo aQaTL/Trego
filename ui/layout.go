@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	BOTTOM_BAR  string = "botbar"
-	TOP_BAR     string = "topbar"
-	SEARCH_VIEW string = "searchview"
-	LIST_WIDTH  int    = 24
+	BottomBar  string = "botbar"
+	TopBar     string = "topbar"
+	SearchView string = "searchview"
+	ListWidth  int    = 24
 )
 
 var (
@@ -33,24 +33,24 @@ func (mngr *TregoManager) Layout(gui *Gui) error {
 	)
 
 	switch mngr.Mode {
-	case BOARD_VIEW:
+	case BoardView:
 		//loops through user's trello lists and adds them to gui
 		for idx, list := range mngr.Lists {
 			log.Printf("Adding view: %v", list.Name)
 			utils.ErrCheck(AddList(gui, list, idx, mngr.listViewOffset))
 		}
-	case CARD_EDITOR:
+	case CardEditor:
 		currView, err := gui.View(mngr.Lists[mngr.currListIdx].Id)
 		utils.ErrCheck(err)
 		CardEditorLayout(currView, gui, mngr)
 		return nil
 	}
 
-	mngr.CheckCurrView(gui, TOP_BAR)
+	mngr.CheckCurrView(gui, TopBar)
 
 	if _, err := gui.SetCurrentView(mngr.currView.Name()); err != nil {
 		mngr.currView = nil
-		mngr.CheckCurrView(gui, TOP_BAR)
+		mngr.CheckCurrView(gui, TopBar)
 		utils.ErrCheck(mngr.SelectView(gui, mngr.currView.Name()))
 		return nil
 	}
@@ -98,8 +98,8 @@ func addListEditor(gui *Gui, view *View) {
 func AddList(gui *Gui, list trello.List, index, offset int) error {
 	_, maxY := gui.Size()
 	if v, err := gui.SetView(list.Id,
-		(index+offset)*LIST_WIDTH+int(math.Abs(sign(index))), 3,
-		(index+offset)*LIST_WIDTH+LIST_WIDTH, maxY-5); err != nil {
+		(index+offset)*ListWidth+int(math.Abs(sign(index))), 3,
+		(index+offset)*ListWidth+ListWidth, maxY-5); err != nil {
 
 		if err != ErrUnknownView {
 			return err
@@ -134,7 +134,7 @@ func AddList(gui *Gui, list trello.List, index, offset int) error {
 
 func topBarLayout(gui *Gui, mngr *TregoManager) error {
 	maxX, _ := gui.Size()
-	if v, err := gui.SetView(TOP_BAR, 0, 0, maxX-1, 2); err != nil {
+	if v, err := gui.SetView(TopBar, 0, 0, maxX-1, 2); err != nil {
 		if err != ErrUnknownView {
 			return err
 		}
@@ -153,7 +153,7 @@ func topBarLayout(gui *Gui, mngr *TregoManager) error {
 //bottom bar with shortcuts
 func bottomBarLayout(gui *Gui) error {
 	maxX, maxY := gui.Size()
-	if v, err := gui.SetView(BOTTOM_BAR, 0, maxY-4, maxX-1, maxY-1); err != nil {
+	if v, err := gui.SetView(BottomBar, 0, maxY-4, maxX-1, maxY-1); err != nil {
 		if err != ErrUnknownView {
 			return err
 		}

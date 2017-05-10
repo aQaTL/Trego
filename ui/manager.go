@@ -7,7 +7,7 @@ import (
 )
 
 type TregoManager struct {
-	Mode           TregoMode //Initially BOARD_VIEW
+	Mode TregoMode //Initially BoardView
 
 	Member         *trello.Member
 	Lists          []trello.List
@@ -20,8 +20,8 @@ type TregoManager struct {
 type TregoMode int
 
 const (
-	BOARD_VIEW TregoMode = iota
-	CARD_EDITOR
+	BoardView  TregoMode = iota
+	CardEditor
 )
 
 func (mngr *TregoManager) SelectView(gui *gocui.Gui, viewName string) error {

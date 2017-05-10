@@ -58,10 +58,10 @@ import (
 )
 
 const (
-	CONFIRM_DIALOG = "confirmdialogview"
-	INPUT_DIALOG   = "inputdialogview"
-	INPUT_FIELD    = "inputdialogfield"
-	SELECT_DIALOG  = "selectdialogview"
+	confirmDialog = "confirmdialogview"
+	inputDialog   = "inputdialogview"
+	inputField    = "inputdialogfield"
+	selectDialog  = "selectdialogview"
 )
 
 func calcDialogBounds(msgL int, gui *gocui.Gui) (x1, y1, x2, y2 int) {
