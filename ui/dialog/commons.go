@@ -99,10 +99,12 @@ func setUpDialogView(gui *gocui.Gui, viewName, viewTitle string, x1, y1, x2, y2 
 
 		view.Highlight = true
 		view.Wrap = true
-		view.Editable = false
+		view.Editable = true
 		view.FgColor = gocui.ColorBlack
 		view.FgColor = gocui.ColorGreen
 		view.Title = viewTitle
+
+		utils.AddNumericSelectEditor(gui, view)
 	}
 	return view, nil
 }

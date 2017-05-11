@@ -10,7 +10,6 @@ import (
 	"strings"
 	"fmt"
 	"log"
-	"time"
 )
 
 const (
@@ -58,42 +57,7 @@ func (mngr *TregoManager) Layout(gui *Gui) error {
 	return nil
 }
 
-func addListEditor(gui *Gui, view *View) {
-	dstNum := ""
-	lastKey := time.Now()
 
-	view.Editor = EditorFunc(func(v *View, key Key, ch rune, mod Modifier) {
-		if ch >= 0x30 && ch <= 0x39 {
-			if time.Since(lastKey).Seconds() > 1 {
-				dstNum = ""
-			}
-			dstNum = dstNum + string(ch)
-
-			lastKey = time.Now()
-		} else if ch == 'g' {
-			dst, err := strconv.Atoi(dstNum)
-			if err != nil {
-				return
-			}
-			viewLines := strings.Split(v.ViewBuffer(), "\n")
-			if len(viewLines) <= dst {
-				return
-			}
-
-			_, cy := v.Cursor()
-			dst -= cy
-			if dst < 0 {
-				for i := 0; i > dst; i-- {
-					utils.CursorUp(gui, v)
-				}
-			} else {
-				for i := 0; i < dst; i++ {
-					utils.CursorDown(gui, v)
-				}
-			}
-		}
-	})
-}
 
 func AddList(gui *Gui, list trello.List, index, offset int) error {
 	_, maxY := gui.Size()
@@ -115,7 +79,7 @@ func AddList(gui *Gui, list trello.List, index, offset int) error {
 		v.Title = list.Name
 		gui.Cursor = true
 
-		addListEditor(gui, v)
+		utils.AddNumericSelectEditor(gui, v)
 
 		color.Output = v
 

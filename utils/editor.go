@@ -3,6 +3,8 @@ package utils
 import (
 	. "github.com/jroimartin/gocui"
 	"strings"
+	"time"
+	"strconv"
 )
 
 //Moves cursor in the view one line up
@@ -46,4 +48,41 @@ func CursorDown(g *Gui, v *View) (err error) {
 		}
 	}
 	return
+}
+
+func AddNumericSelectEditor(gui *Gui, view *View) {
+	dstNum := ""
+	lastKey := time.Now()
+
+	view.Editor = EditorFunc(func(v *View, key Key, ch rune, mod Modifier) {
+		if ch >= 0x30 && ch <= 0x39 {
+			if time.Since(lastKey).Seconds() > 1 {
+				dstNum = ""
+			}
+			dstNum = dstNum + string(ch)
+
+			lastKey = time.Now()
+		} else if ch == 'g' {
+			dst, err := strconv.Atoi(dstNum)
+			if err != nil {
+				return
+			}
+			viewLines := strings.Split(v.ViewBuffer(), "\n")
+			if len(viewLines) <= dst {
+				return
+			}
+
+			_, cy := v.Cursor()
+			dst -= cy
+			if dst < 0 {
+				for i := 0; i > dst; i-- {
+					CursorUp(gui, v)
+				}
+			} else {
+				for i := 0; i < dst; i++ {
+					CursorDown(gui, v)
+				}
+			}
+		}
+	})
 }

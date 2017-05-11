@@ -19,7 +19,7 @@ func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string
 
 	inputView, err := setUpDialogView(gui, inputField, "", x1, y1+3, x2, y2+3) //Place it a little lower
 	utils.ErrCheck(err)
-	inputView.Editable = true
+	inputView.Editor = gocui.DefaultEditor
 	fmt.Fprint(inputView, initValue)
 
 	utils.ErrCheck(
