@@ -1,0 +1,57 @@
+{
+	"default_bottom_bar_key": "board_view",
+
+	"bottom_bar": {
+		"board_view": [
+			[
+				"\u21C4", "change list",
+				"^C", "exit",
+				"n", "add card",
+				"l", "add list",
+				"d", "delete",
+				"s", "card search",
+				"m", "move card"
+			],
+			[
+				"\u21C5", "change card",
+				"^d", "move card down",
+				"^u", "move card up",
+				"b", "change board"
+			]
+		],
+		"CARD_EDITOR_VIEW_0": [
+			[
+				"^q", "quit",
+				"^s", "save changes"
+			],
+			[
+
+			]
+		],
+		"CARD_EDITOR_VIEW_1": [
+			[
+				"^q", "quit"
+			],
+			[
+
+			]
+		],
+		"CARD_EDITOR_VIEW_2": [
+			[
+				"^q", "quit",
+				"^s", "save changes"
+			],
+			[
+
+			]
+		],
+		"CARD_EDITOR_VIEW_3": [
+			[
+				"^q", "quit"
+			],
+			[
+
+			]
+		]
+	}
+}

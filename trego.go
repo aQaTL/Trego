@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"github.com/aqatl/Trego/utils"
+	"encoding/json"
+	"io/ioutil"
 )
 
 func main() {
@@ -24,10 +26,23 @@ func main() {
 	board := conn.BoardByName(user, "Testing board")
 	lists := conn.Lists(board)
 
+	var strings ui.Strings
+	stringsJson, err := ioutil.ReadFile("strings.json")
+	utils.ErrCheck(err)
+	err = json.Unmarshal(stringsJson, &strings)
+	utils.ErrCheck(err)
+
 	gui.Mouse = false
 	gui.Highlight = true
 	gui.SelFgColor = ColorGreen
-	mngr := &ui.TregoManager{Member: user, Lists: lists, CurrBoard: board}
+
+	mngr := &ui.TregoManager{
+		Strings:
+		strings,
+		Member: user,
+		Lists: lists,
+		CurrBoard: board}
+
 	gui.SetManager(mngr)
 
 	ui.SetKeyBindings(gui, mngr)

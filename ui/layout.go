@@ -28,7 +28,7 @@ var (
 
 func (mngr *TregoManager) Layout(gui *Gui) error {
 	utils.ErrCheck(
-		bottomBarLayout(gui),
+		bottomBarLayout(gui, mngr),
 		topBarLayout(gui, mngr),
 	)
 
@@ -151,7 +151,7 @@ func topBarLayout(gui *Gui, mngr *TregoManager) error {
 }
 
 //bottom bar with shortcuts
-func bottomBarLayout(gui *Gui) error {
+func bottomBarLayout(gui *Gui, mngr *TregoManager) error {
 	maxX, maxY := gui.Size()
 	if v, err := gui.SetView(BottomBar, 0, maxY-4, maxX-1, maxY-1); err != nil {
 		if err != ErrUnknownView {
@@ -162,18 +162,21 @@ func bottomBarLayout(gui *Gui) error {
 		v.Highlight = false
 		v.BgColor = ColorBlack
 
-		fmt.Fprint(v,
-			cyan("\xE2\x87\x84"), yell(" change list "),
-			cyan("^C"), yell(" exit "),
-			cyan("n"), yell(" add card "),
-			cyan("l"), yell(" add list "),
-			cyan("d"), yell(" delete "),
-			cyan("s"), yell(" card search "),
-			cyan("m"), yell(" move card\n"),
-			cyan("\xE2\x87\x85"), yell(" change card "),
-			cyan("^d"), yell(" move card down "),
-			cyan("^u"), yell(" move card up "),
-			cyan("b"), yell(" change board"))
+		if mngr.CurrBotBarKey == "" {
+			mngr.CurrBotBarKey = mngr.DefaultBotBarKey
+		}
+
+		shortcuts := mngr.BottomBar[mngr.CurrBotBarKey]
+		for i := 0; i < 2; i++ {
+			for j := 0; j < len(shortcuts[i]); j += 2 {
+				fmt.Fprintf(v,
+					"%v %v ",
+					cyan(shortcuts[i][j]),
+					yell(shortcuts[i][j+1]),
+				)
+			}
+			fmt.Fprintln(v)
+		}
 	}
 	return nil
 }

@@ -46,6 +46,8 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 		)
 
 		utils.ErrCheck(mngr.SelectView(gui, cardNameView))
+		mngr.CurrBotBarKey = cardNameView
+		utils.ErrCheck(gui.DeleteView(BottomBar))
 	}
 
 	if listInfoView, err := gui.SetView(cardListInfoView, w*2/3, 3, w-1, 5); err != nil {
@@ -134,6 +136,8 @@ func addEditorViewSwitching(gui *Gui, view *View, mngr *TregoManager) error {
 		nextViewName := view.Name()[:17] + string(rune(idx+48))
 		log.Printf("switching editor view to %v", nextViewName)
 		utils.ErrCheck(mngr.SelectView(gui, nextViewName))
+		mngr.CurrBotBarKey = nextViewName
+		utils.ErrCheck(gui.DeleteView(BottomBar))
 		return nil
 	})
 }
@@ -154,6 +158,8 @@ func addEditorClosing(gui *Gui, view *View, mngr *TregoManager) error {
 		)
 		mngr.Mode = BoardView
 		mngr.currView = nil
+		mngr.CurrBotBarKey = mngr.DefaultBotBarKey
+		utils.ErrCheck(gui.DeleteView(BottomBar))
 		return nil
 	})
 }
