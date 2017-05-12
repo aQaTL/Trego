@@ -1,14 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/aqatl/Trego/conn"
 	"github.com/aqatl/Trego/ui"
+	"github.com/aqatl/Trego/utils"
 	. "github.com/jroimartin/gocui"
+	"io/ioutil"
 	"log"
 	"os"
-	"github.com/aqatl/Trego/utils"
-	"encoding/json"
-	"io/ioutil"
 )
 
 func main() {
@@ -37,10 +37,9 @@ func main() {
 	gui.SelFgColor = ColorGreen
 
 	mngr := &ui.TregoManager{
-		Strings:
-		strings,
-		Member: user,
-		Lists: lists,
+		Strings:   strings,
+		Member:    user,
+		Lists:     lists,
 		CurrBoard: board}
 
 	gui.SetManager(mngr)
