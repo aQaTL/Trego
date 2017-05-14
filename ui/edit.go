@@ -25,10 +25,20 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 	utils.ErrCheck(err)
 	card := cards[cardIdx]
 
-	w, h := gui.Size()
+	utils.ErrCheck(
+		nameView(gui, mngr, &card),
+		listInfoView(gui, mngr),
+		labelsView(gui, mngr, &card),
+		descriptionView(gui, mngr, &card),
+		commentsView(gui, mngr, &card),
+	)
+}
+
+func nameView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
+	w, _ := gui.Size()
 	if nameView, err := gui.SetView(cardNameView, 0, 3, w*2/3-1, 5); err != nil {
 		if err != ErrUnknownView {
-			utils.ErrCheck(err)
+			return
 		}
 
 		nameView.Title = "Card name"
@@ -42,17 +52,21 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 		utils.ErrCheck(
 			addEditorViewSwitching(gui, nameView, mngr),
 			addEditorClosing(gui, nameView, mngr),
-			addChangesSaving(gui, nameView, mngr, &card),
+			addChangesSaving(gui, nameView, mngr, card),
 		)
 
 		utils.ErrCheck(mngr.SelectView(gui, cardNameView))
 		mngr.CurrBotBarKey = cardNameView
 		utils.ErrCheck(gui.DeleteView(BottomBar))
 	}
+	return
+}
 
+func listInfoView(gui *Gui, mngr *TregoManager) (err error) {
+	w, _ := gui.Size()
 	if listInfoView, err := gui.SetView(cardListInfoView, w*2/3, 3, w-1, 5); err != nil {
 		if err != ErrUnknownView {
-			utils.ErrCheck(err)
+			return
 		}
 
 		listInfoView.Title = "Card in list:"
@@ -60,10 +74,14 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 
 		fmt.Fprint(listInfoView, yell(mngr.Lists[mngr.currListIdx].Name))
 	}
+	return
+}
 
+func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
+	w, _ := gui.Size()
 	if labelsView, err := gui.SetView(cardLabelsView, 0, 6, w-1, 8); err != nil {
 		if err != ErrUnknownView {
-			utils.ErrCheck(err)
+			return
 		}
 
 		labelsView.Title = "Labels"
@@ -71,7 +89,8 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 
 		for _, label := range card.Labels {
 			//TODO Colored labels
-			fmt.Fprint(labelsView, label.Name)
+			fmt.Fprint(labelsView, label.Name, label.Color)
+
 		}
 
 		utils.ErrCheck(
@@ -79,10 +98,14 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 			addEditorClosing(gui, labelsView, mngr),
 		)
 	}
+	return
+}
 
+func descriptionView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
+	w, h := gui.Size()
 	if descriptionView, err := gui.SetView(cardDescView, 0, 9, int(w/3), h-5); err != nil {
 		if err != ErrUnknownView {
-			utils.ErrCheck(err)
+			return
 		}
 
 		descriptionView.Title = "Description"
@@ -94,13 +117,17 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 		utils.ErrCheck(
 			addEditorViewSwitching(gui, descriptionView, mngr),
 			addEditorClosing(gui, descriptionView, mngr),
-			addChangesSaving(gui, descriptionView, mngr, &card),
+			addChangesSaving(gui, descriptionView, mngr, card),
 		)
 	}
+	return
+}
 
+func commentsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
+	w, h := gui.Size()
 	if commentsView, err := gui.SetView(cardCommentsView, int(w/3)+1, 9, w-1, h-5); err != nil {
 		if err != ErrUnknownView {
-			utils.ErrCheck(err)
+			return
 		}
 
 		commentsView.Title = "Comments"
@@ -128,6 +155,7 @@ func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
 			addEditorClosing(gui, commentsView, mngr),
 		)
 	}
+	return
 }
 
 func addEditorViewSwitching(gui *Gui, view *View, mngr *TregoManager) error {
