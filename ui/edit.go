@@ -38,7 +38,7 @@ func nameView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 	w, _ := gui.Size()
 	if nameView, err := gui.SetView(cardNameView, 0, 3, w*2/3-1, 5); err != nil {
 		if err != ErrUnknownView {
-			return
+			return err
 		}
 
 		nameView.Title = "Card name"
@@ -66,7 +66,7 @@ func listInfoView(gui *Gui, mngr *TregoManager) (err error) {
 	w, _ := gui.Size()
 	if listInfoView, err := gui.SetView(cardListInfoView, w*2/3, 3, w-1, 5); err != nil {
 		if err != ErrUnknownView {
-			return
+			return err
 		}
 
 		listInfoView.Title = "Card in list:"
@@ -81,7 +81,7 @@ func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 	w, _ := gui.Size()
 	if labelsView, err := gui.SetView(cardLabelsView, 0, 6, w-1, 8); err != nil {
 		if err != ErrUnknownView {
-			return
+			return err
 		}
 
 		labelsView.Title = "Labels"
@@ -105,7 +105,7 @@ func descriptionView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error
 	w, h := gui.Size()
 	if descriptionView, err := gui.SetView(cardDescView, 0, 9, int(w/3), h-5); err != nil {
 		if err != ErrUnknownView {
-			return
+			return err
 		}
 
 		descriptionView.Title = "Description"
@@ -127,7 +127,7 @@ func commentsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 	w, h := gui.Size()
 	if commentsView, err := gui.SetView(cardCommentsView, int(w/3)+1, 9, w-1, h-5); err != nil {
 		if err != ErrUnknownView {
-			return
+			return err
 		}
 
 		commentsView.Title = "Comments"
