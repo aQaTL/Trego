@@ -3,10 +3,10 @@ package ui
 import (
 	"fmt"
 	"github.com/aqatl/Trego/utils"
-	. "github.com/jroimartin/gocui"
-	"log"
 	"github.com/aqatl/go-trello"
 	"github.com/fatih/color"
+	. "github.com/jroimartin/gocui"
+	"log"
 	"time"
 )
 
@@ -88,9 +88,11 @@ func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 		labelsView.Editable = false
 
 		for _, label := range card.Labels {
-			//TODO Colored labels
-			fmt.Fprint(labelsView, label.Name, label.Color)
-
+			if label.Name == "" {
+				label.Name = label.Color
+			}
+			col, hi := utils.MapColor(label.Color)
+			fmt.Fprintf(labelsView, "\033[3%d;%dm%v\033[0m ", col, hi, label.Name)
 		}
 
 		utils.ErrCheck(
