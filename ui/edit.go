@@ -80,41 +80,47 @@ func listInfoView(gui *Gui, mngr *TregoManager) (err error) {
 
 func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 	w, _ := gui.Size()
-	if labelsView, err := gui.SetView(cardLabelsView, 0, 6, w-1, 8); err != nil {
+	if view, err := gui.SetView(cardLabelsView, 0, 6, w-1, 8); err != nil {
 		if err != ErrUnknownView {
 			return err
 		}
 
-		labelsView.Title = "Labels"
-		labelsView.Editable = true
+		view.Title = "Labels"
+		view.Editable = true
 
 		labelsLens := make([]int, len(card.Labels))
+		var currLabel trello.Label
+		if len(card.Labels) > 0 {
+			currLabel = card.Labels[0]
+		}
 
-		labelsView.Editor = EditorFunc(func(v *View, key Key, ch rune, mod Modifier) {
+		view.Editor = EditorFunc(func(v *View, key Key, ch rune, mod Modifier) {
 			switch key {
 			case KeyArrowRight:
-				cx, cy := labelsView.Cursor()
-				bufferLen := utf8.RuneCountInString(labelsView.Buffer())
+				cx, cy := view.Cursor()
+				bufferLen := utf8.RuneCountInString(view.Buffer())
 				sum := 0
 
-				for _, labelLen := range labelsLens {
+				for i, labelLen := range labelsLens {
 					sum += labelLen + 1
 					if sum == cx+labelLen+1 && sum < bufferLen-1 {
-						utils.ErrCheck(labelsView.SetCursor(sum, cy))
+						utils.ErrCheck(view.SetCursor(sum, cy))
+						currLabel = card.Labels[i+1]
 						break
 					}
 				}
 			case KeyArrowLeft:
-				cx, cy := labelsView.Cursor()
+				cx, cy := view.Cursor()
 				if cx == 0 {
 					return
 				}
 
 				sum := 0
-				for _, labelLen := range labelsLens {
+				for i, labelLen := range labelsLens {
 					sum += labelLen + 1
 					if sum == cx {
-						utils.ErrCheck(labelsView.SetCursor(cx-labelLen-1, cy))
+						utils.ErrCheck(view.SetCursor(cx-labelLen-1, cy))
+						currLabel = card.Labels[i]
 						break
 					}
 				}
@@ -126,14 +132,45 @@ func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 				label.Name = "\u2588\u2588\u2588\u2588\u2588"
 			}
 			col, hi := utils.MapColor(label.Color)
-			fmt.Fprintf(labelsView, "\033[3%d;%dm%v\033[0m ", col, hi, label.Name)
+			fmt.Fprintf(view, "\033[3%d;%dm%v\033[0m ", col, hi, label.Name)
 			labelsLens[i] = utf8.RuneCountInString(label.Name)
 		}
 
 		utils.ErrCheck(
-			addEditorViewSwitching(gui, labelsView, mngr),
-			addEditorClosing(gui, labelsView, mngr),
+			addEditorViewSwitching(gui, view, mngr),
+			addEditorClosing(gui, view, mngr),
 		)
+
+		gui.SetKeybinding(cardLabelsView, 'd', ModNone, func(gui *Gui, view *View) error {
+			if currLabel == *new(trello.Label) {
+				return nil
+			}
+			utils.ErrCheck(currLabel.DeleteLabel())
+			log.Printf("Successfully deleted label %v with color: %v", currLabel.Name, currLabel.Color)
+			for i, label := range card.Labels {
+				if label.Id == currLabel.Id {
+					card.Labels = utils.RemoveLabel(card.Labels, i)
+					labelsLens = utils.RemoveInt(labelsLens, i)
+					if len(card.Labels) >= 2 {
+						currLabel = card.Labels[0]
+					} else {
+						currLabel = *new(trello.Label)
+					}
+					break
+				}
+			}
+
+			view.Clear()
+
+			gui.DeleteKeybindings(cardLabelsView)
+			utils.ErrCheck(
+				gui.DeleteView(cardLabelsView),
+				labelsView(gui, mngr, card),
+				mngr.SelectView(gui, cardLabelsView),
+			)
+
+			return nil
+		})
 	}
 	return
 }

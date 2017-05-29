@@ -18,12 +18,22 @@ func RemoveList(lists []trello.List, idx int) []trello.List {
 	return lists[:len(lists)-1]
 }
 
+func RemoveLabel(labels []trello.Label, idx int) []trello.Label {
+	copy(labels[idx:], labels[idx+1:])
+	return labels[:len(labels)-1]
+}
+
+func RemoveInt(slice []int, idx int) []int {
+	copy(slice[idx:], slice[idx+1:])
+	return slice[:len(slice)-1]
+}
+
 var FgColors = []string{
-	"null", "red", "dark green", "brown", "dark blue", "purple", "cyan", "",
+	"null", "red", "green", "brown", "dark blue", "purple", "cyan", "",
 }
 
 var HiFgColors = []string{
-	"black", "orange", "green", "yellow", "blue", "pink", "sky", "white",
+	"black", "orange", "lime", "yellow", "blue", "pink", "sky", "white",
 }
 
 func MapColor(colorStr string) (color, hi int) {
