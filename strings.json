@@ -30,9 +30,13 @@
 		],
 		"CARD_EDITOR_VIEW_1": [
 			[
-				"^q", "quit"
+				"\u21C4", "change label",
+				"l", "new label",
+				"d", "delete label",
+				"a", "all labels"
 			],
 			[
+				"^q", "quit"
 
 			]
 		],

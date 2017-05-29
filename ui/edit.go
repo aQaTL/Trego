@@ -8,6 +8,7 @@ import (
 	. "github.com/jroimartin/gocui"
 	"log"
 	"time"
+	"unicode/utf8"
 )
 
 const (
@@ -85,14 +86,48 @@ func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 		}
 
 		labelsView.Title = "Labels"
-		labelsView.Editable = false
+		labelsView.Editable = true
 
-		for _, label := range card.Labels {
+		labelsLens := make([]int, len(card.Labels))
+
+		labelsView.Editor = EditorFunc(func(v *View, key Key, ch rune, mod Modifier) {
+			switch key {
+			case KeyArrowRight:
+				cx, cy := labelsView.Cursor()
+				bufferLen := utf8.RuneCountInString(labelsView.Buffer())
+				sum := 0
+
+				for _, labelLen := range labelsLens {
+					sum += labelLen + 1
+					if sum == cx+labelLen+1 && sum < bufferLen-1 {
+						utils.ErrCheck(labelsView.SetCursor(sum, cy))
+						break
+					}
+				}
+			case KeyArrowLeft:
+				cx, cy := labelsView.Cursor()
+				if cx == 0 {
+					return
+				}
+
+				sum := 0
+				for _, labelLen := range labelsLens {
+					sum += labelLen + 1
+					if sum == cx {
+						utils.ErrCheck(labelsView.SetCursor(cx-labelLen-1, cy))
+						break
+					}
+				}
+			}
+		})
+
+		for i, label := range card.Labels {
 			if label.Name == "" {
-				label.Name = label.Color
+				label.Name = "\u2588\u2588\u2588\u2588\u2588"
 			}
 			col, hi := utils.MapColor(label.Color)
 			fmt.Fprintf(labelsView, "\033[3%d;%dm%v\033[0m ", col, hi, label.Name)
+			labelsLens[i] = utf8.RuneCountInString(label.Name)
 		}
 
 		utils.ErrCheck(
@@ -198,7 +233,7 @@ func addChangesSaving(gui *Gui, view *View, mngr *TregoManager, card *trello.Car
 	return gui.SetKeybinding(view.Name(), KeyCtrlS, ModNone, func(gui *Gui, view *View) (err error) {
 		switch view.Name() {
 		case cardNameView:
-			_, err = card.SetName(view.Buffer()[:len(view.Buffer())-2])
+			_, err = card.SetName(view.Buffer()[:len(view.Buffer())-1])
 		case cardDescView:
 			_, err = card.SetDescription(view.Buffer())
 		default:

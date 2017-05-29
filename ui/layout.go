@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"fmt"
-	"log"
 )
 
 const (
@@ -35,7 +34,6 @@ func (mngr *TregoManager) Layout(gui *Gui) error {
 	case BoardView:
 		//loops through user's trello lists and adds them to gui
 		for idx, list := range mngr.Lists {
-			log.Printf("Adding view: %v", list.Name)
 			utils.ErrCheck(AddList(gui, list, idx, mngr.listViewOffset))
 		}
 	case CardEditor:
