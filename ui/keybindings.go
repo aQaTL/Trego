@@ -434,6 +434,10 @@ func addCardAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 				}
 				log.Printf("Successfully added new card: %v", card.Name)
 
+				cards, err := list.Cards()
+				utils.ErrCheck(err)
+				cards = append(cards, *card)
+
 				gui.Execute(func(gui *Gui) error {
 					utils.ErrCheck(gui.DeleteView(list.Id)) //Forces view update
 					return nil
