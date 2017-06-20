@@ -16,7 +16,9 @@
 				"\u21C5", "change card",
 				"^d", "move card down",
 				"^u", "move card up",
-				"b", "change board"
+				"b", "change board",
+				"^n", "move list right",
+				"^p", "move list left"
 			]
 		],
 		"CARD_EDITOR_VIEW_0": [
@@ -31,9 +33,9 @@
 		"CARD_EDITOR_VIEW_1": [
 			[
 				"\u21C4", "change label",
-				"l", "new label",
-				"d", "delete label",
-				"a", "all labels"
+				"a", "add label",
+				"n", "add new label",
+				"d", "delete label"
 			],
 			[
 				"^q", "quit"

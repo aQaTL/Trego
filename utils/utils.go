@@ -28,11 +28,11 @@ func RemoveInt(slice []int, idx int) []int {
 	return slice[:len(slice)-1]
 }
 
-var FgColors = []string{
+var FgColors = [8]string{
 	"null", "red", "green", "brown", "dark blue", "purple", "cyan", "",
 }
 
-var HiFgColors = []string{
+var HiFgColors = [8]string{
 	"black", "orange", "lime", "yellow", "blue", "pink", "sky", "white",
 }
 

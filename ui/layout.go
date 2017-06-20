@@ -25,22 +25,9 @@ var (
 )
 
 func (mngr *TregoManager) Layout(gui *Gui) error {
-	utils.ErrCheck(
-		bottomBarLayout(gui, mngr),
-		topBarLayout(gui, mngr),
-	)
-
-	switch mngr.Mode {
-	case BoardView:
-		//loops through user's trello lists and adds them to gui
-		for idx, list := range mngr.Lists {
-			utils.ErrCheck(AddList(gui, list, idx, mngr.listViewOffset))
-		}
-	case CardEditor:
-		currView, err := gui.View(mngr.Lists[mngr.currListIdx].Id)
-		utils.ErrCheck(err)
-		CardEditorLayout(currView, gui, mngr)
-		return nil
+	//loops through user's trello lists and adds them to gui
+	for idx, list := range mngr.Lists {
+		utils.ErrCheck(AddList(gui, list, idx, mngr.listViewOffset))
 	}
 
 	mngr.CheckCurrView(gui, TopBar)
@@ -54,8 +41,6 @@ func (mngr *TregoManager) Layout(gui *Gui) error {
 
 	return nil
 }
-
-
 
 func AddList(gui *Gui, list trello.List, index, offset int) error {
 	_, maxY := gui.Size()
@@ -94,7 +79,11 @@ func AddList(gui *Gui, list trello.List, index, offset int) error {
 	return nil
 }
 
-func topBarLayout(gui *Gui, mngr *TregoManager) error {
+type InfoBar struct{
+	BoardName string
+}
+
+func (iBar *InfoBar) Layout(gui *Gui) error {
 	maxX, _ := gui.Size()
 	if v, err := gui.SetView(TopBar, 0, 0, maxX-1, 2); err != nil {
 		if err != ErrUnknownView {
@@ -106,14 +95,21 @@ func topBarLayout(gui *Gui, mngr *TregoManager) error {
 		v.BgColor = ColorBlack
 
 		color.Output = v
-		color.New(color.FgYellow).Add(color.Bold).Printf("Board: %v", mngr.CurrBoard.Name)
+		color.New(color.FgYellow).Add(color.Bold).Printf("Board: %v", iBar.BoardName)
 	}
 
 	return nil
 }
 
+type ShortcutsBar struct {
+	DefaultBotBarKey string `json:"default_bottom_bar_key"`
+	Data             map[string][][]string `json:"bottom_bar"`
+
+	CurrBotBarKey string
+}
+
 //bottom bar with shortcuts
-func bottomBarLayout(gui *Gui, mngr *TregoManager) error {
+func (botBar *ShortcutsBar) Layout(gui *Gui) error {
 	maxX, maxY := gui.Size()
 	if v, err := gui.SetView(BottomBar, 0, maxY-4, maxX-1, maxY-1); err != nil {
 		if err != ErrUnknownView {
@@ -124,11 +120,11 @@ func bottomBarLayout(gui *Gui, mngr *TregoManager) error {
 		v.Highlight = false
 		v.BgColor = ColorBlack
 
-		if mngr.CurrBotBarKey == "" {
-			mngr.CurrBotBarKey = mngr.DefaultBotBarKey
+		if botBar.CurrBotBarKey == "" {
+			botBar.CurrBotBarKey = botBar.DefaultBotBarKey
 		}
 
-		shortcuts := mngr.BottomBar[mngr.CurrBotBarKey]
+		shortcuts := botBar.Data[botBar.CurrBotBarKey]
 		for i := 0; i < 2; i++ {
 			for j := 0; j < len(shortcuts[i]); j += 2 {
 				fmt.Fprintf(v,

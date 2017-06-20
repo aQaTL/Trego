@@ -27,7 +27,7 @@ func SelectDialog(title string, gui *gocui.Gui, selIdxC chan int, values []strin
 			gocui.KeyEnter,
 			gocui.ModNone,
 			func(gui *gocui.Gui, view *gocui.View) error {
-				dialogCleanUp(gui, selectDialog)
+				cleanUp(gui, selectDialog)
 				_, cy := view.Cursor()
 				selIdxC <- cy
 				close(selIdxC)
@@ -41,7 +41,7 @@ func SelectDialog(title string, gui *gocui.Gui, selIdxC chan int, values []strin
 			gocui.ModNone,
 			func(gui *gocui.Gui, view *gocui.View) error {
 				close(selIdxC)
-				dialogCleanUp(gui, selectDialog)
+				cleanUp(gui, selectDialog)
 				return nil
 			}))
 

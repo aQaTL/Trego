@@ -7,29 +7,15 @@ import (
 )
 
 type TregoManager struct {
-	Mode TregoMode //Initially BoardView
-	Strings
-
 	Member         *trello.Member
 	Lists          []trello.List
 	CurrBoard      *trello.Board
 	currListIdx    int
 	currView       *gocui.View
 	listViewOffset int
-}
 
-type TregoMode int
-
-const (
-	BoardView  TregoMode = iota
-	CardEditor
-)
-
-type Strings struct {
-	DefaultBotBarKey string `json:"default_bottom_bar_key"`
-	BottomBar        map[string][][]string `json:"bottom_bar"`
-
-	CurrBotBarKey    string
+	TopBar *InfoBar
+	BotBar *ShortcutsBar
 }
 
 func (mngr *TregoManager) SelectView(gui *gocui.Gui, viewName string) error {

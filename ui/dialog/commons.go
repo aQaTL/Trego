@@ -62,6 +62,8 @@ const (
 	inputDialog   = "inputdialogview"
 	inputField    = "inputdialogfield"
 	selectDialog  = "selectdialogview"
+	labelTitle    = "labeltitledialogview"
+	labelColor    = "labelcolordialogview"
 )
 
 func calcDialogBounds(msgL int, gui *gocui.Gui) (x1, y1, x2, y2 int) {
@@ -75,7 +77,7 @@ func calcDialogBounds(msgL int, gui *gocui.Gui) (x1, y1, x2, y2 int) {
 	return
 }
 
-func dialogCleanUp(gui *gocui.Gui, dialogTypes ...string) {
+func cleanUp(gui *gocui.Gui, dialogTypes ...string) {
 	for _, dialogType := range dialogTypes {
 		gui.DeleteKeybindings(dialogType)
 		utils.ErrCheck(gui.DeleteView(dialogType))

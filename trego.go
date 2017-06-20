@@ -26,23 +26,27 @@ func main() {
 	board := conn.BoardByName(user, "Testing board")
 	lists := conn.Lists(board)
 
-	var strings ui.Strings
+	var shortcutsBar ui.ShortcutsBar
 	stringsJson, err := ioutil.ReadFile("strings.json")
 	utils.ErrCheck(err)
-	err = json.Unmarshal(stringsJson, &strings)
+	err = json.Unmarshal(stringsJson, &shortcutsBar)
 	utils.ErrCheck(err)
+
+	infoBar := &ui.InfoBar{BoardName: board.Name}
 
 	gui.Mouse = false
 	gui.Highlight = true
 	gui.SelFgColor = ColorGreen
 
 	mngr := &ui.TregoManager{
-		Strings:   strings,
 		Member:    user,
 		Lists:     lists,
-		CurrBoard: board}
+		CurrBoard: board,
+		BotBar:    &shortcutsBar,
+		TopBar:    infoBar,
+	}
 
-	gui.SetManager(mngr)
+	gui.SetManager(mngr, &shortcutsBar, infoBar)
 
 	ui.SetKeyBindings(gui, mngr)
 

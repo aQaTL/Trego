@@ -129,7 +129,7 @@ func addDeleting(gui *Gui, listName string, mngr *TregoManager) error {
 					gui,
 					delModeC,
 					[]string{"Archive", "Delete", "Archive list"}).
-						Name()))
+					Name()))
 
 		go func() {
 			currList := mngr.Lists[mngr.currListIdx]
@@ -197,8 +197,8 @@ func addCardMoving(gui *Gui, listName string, mngr *TregoManager) error {
 			cards[cardIdx], cards[prevCardIdx] = cards[prevCardIdx], cards[cardIdx]
 		} else {
 			cards[cardIdx].Pos =
-					cards[prevCardIdx].Pos -
-							(cards[prevCardIdx].Pos-cards[cardIdx-2].Pos)/2
+				cards[prevCardIdx].Pos -
+					(cards[prevCardIdx].Pos-cards[cardIdx-2].Pos)/2
 
 			cards[cardIdx], cards[prevCardIdx] = cards[prevCardIdx], cards[cardIdx]
 		}
@@ -240,9 +240,9 @@ func addCardMoving(gui *Gui, listName string, mngr *TregoManager) error {
 			cards[cardIdx], cards[nextCardIdx] = cards[nextCardIdx], cards[cardIdx]
 		} else {
 			cards[cardIdx].Pos =
-					cards[nextCardIdx].Pos +
-							(cards[cardIdx+2%len(cards)].Pos -
-									cards[nextCardIdx].Pos) / 2
+				cards[nextCardIdx].Pos +
+					(cards[cardIdx+2%len(cards)].Pos -
+						cards[nextCardIdx].Pos) / 2
 
 			cards[cardIdx], cards[nextCardIdx] = cards[nextCardIdx], cards[cardIdx]
 		}
@@ -281,7 +281,7 @@ func addCardToListMoving(gui *Gui, listName string, mngr *TregoManager) error {
 					gui,
 					destListC,
 					listNames).
-						Name()))
+					Name()))
 
 		go func() {
 			if listIdx, ok := <-destListC; ok {
@@ -344,15 +344,15 @@ func addListMoving(gui *Gui, viewName string, mngr *TregoManager) error {
 			mngr.Lists[currIdx].Pos = mngr.Lists[nextListIdx].Pos + (1 << 16)
 
 			mngr.Lists[currIdx], mngr.Lists[nextListIdx] =
-					mngr.Lists[nextListIdx], mngr.Lists[currIdx]
+				mngr.Lists[nextListIdx], mngr.Lists[currIdx]
 		} else {
 			mngr.Lists[currIdx].Pos =
-					mngr.Lists[nextListIdx].Pos +
-							(mngr.Lists[(currIdx+2)%len(mngr.Lists)].Pos -
-									mngr.Lists[nextListIdx].Pos) / 2
+				mngr.Lists[nextListIdx].Pos +
+					(mngr.Lists[(currIdx+2)%len(mngr.Lists)].Pos -
+						mngr.Lists[nextListIdx].Pos) / 2
 
 			mngr.Lists[currIdx], mngr.Lists[nextListIdx] =
-					mngr.Lists[nextListIdx], mngr.Lists[currIdx]
+				mngr.Lists[nextListIdx], mngr.Lists[currIdx]
 		}
 
 		queue <- mngr.Lists[nextListIdx]
@@ -389,14 +389,14 @@ func addListMoving(gui *Gui, viewName string, mngr *TregoManager) error {
 			mngr.Lists[currIdx].Pos = mngr.Lists[prevListIdx].Pos / 2
 
 			mngr.Lists[currIdx], mngr.Lists[prevListIdx] =
-					mngr.Lists[prevListIdx], mngr.Lists[currIdx]
+				mngr.Lists[prevListIdx], mngr.Lists[currIdx]
 		} else {
 			mngr.Lists[currIdx].Pos =
-					mngr.Lists[prevListIdx].Pos -
-							(mngr.Lists[prevListIdx].Pos-mngr.Lists[currIdx-2].Pos)/2
+				mngr.Lists[prevListIdx].Pos -
+					(mngr.Lists[prevListIdx].Pos-mngr.Lists[currIdx-2].Pos)/2
 
 			mngr.Lists[currIdx], mngr.Lists[prevListIdx] =
-					mngr.Lists[prevListIdx], mngr.Lists[currIdx]
+				mngr.Lists[prevListIdx], mngr.Lists[currIdx]
 		}
 
 		queue <- mngr.Lists[prevListIdx]
@@ -491,7 +491,16 @@ func addListAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 
 func addCardEditing(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, KeyEnter, ModNone, func(gui *Gui, view *View) error {
-		CardEditorLayout(view, gui, mngr)
+		cards, err := mngr.Lists[mngr.currListIdx].Cards()
+		utils.ErrCheck(err)
+		gui.SetManager(
+			&CardEditor{
+				Mngr: mngr,
+				Card: cards[SelectedItemIdx(view)],
+			},
+			mngr.BotBar,
+			mngr.TopBar,
+		)
 		return nil
 	})
 }

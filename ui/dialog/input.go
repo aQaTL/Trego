@@ -28,7 +28,7 @@ func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string
 			gocui.KeyEnter,
 			gocui.ModNone,
 			func(gui *gocui.Gui, view *gocui.View) error {
-				dialogCleanUp(gui, inputDialog, inputField)
+				cleanUp(gui, inputDialog, inputField)
 				input <- strings.TrimSuffix(inputView.Buffer(), " \n")
 				close(input)
 				return nil
@@ -41,7 +41,7 @@ func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string
 			gocui.ModNone,
 			func(gui *gocui.Gui, view *gocui.View) error {
 				close(input)
-				dialogCleanUp(gui, inputDialog, inputField)
+				cleanUp(gui, inputDialog, inputField)
 				return nil
 			}))
 

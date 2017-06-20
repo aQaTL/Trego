@@ -36,6 +36,7 @@ _testmain.go
 Trego.iml
 
 # Log files
+log.txt
 errLinux
 errWindows
 

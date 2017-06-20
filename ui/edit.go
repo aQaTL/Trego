@@ -9,6 +9,7 @@ import (
 	"log"
 	"time"
 	"unicode/utf8"
+	"github.com/aqatl/Trego/ui/dialog"
 )
 
 const (
@@ -19,23 +20,28 @@ const (
 	cardListInfoView string = "CARD_EDITOR_VIEW_4"
 )
 
-func CardEditorLayout(listView *View, gui *Gui, mngr *TregoManager) {
-	mngr.Mode = CardEditor
-	cardIdx := SelectedItemIdx(listView)
-	cards, err := mngr.Lists[mngr.currListIdx].Cards()
-	utils.ErrCheck(err)
-	card := cards[cardIdx]
+type CardEditor struct {
+	Mngr *TregoManager
+	Card trello.Card
 
-	utils.ErrCheck(
-		nameView(gui, mngr, &card),
-		listInfoView(gui, mngr),
-		labelsView(gui, mngr, &card),
-		descriptionView(gui, mngr, &card),
-		commentsView(gui, mngr, &card),
-	)
+	currView *View
 }
 
-func nameView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
+func (cEdit *CardEditor) Layout(gui *Gui) error {
+	utils.ErrCheck(
+		cEdit.nameView(gui),
+		cEdit.listInfoView(gui),
+		cEdit.labelsView(gui),
+		cEdit.descriptionView(gui),
+		cEdit.commentsView(gui),
+	)
+	if _, err := gui.SetCurrentView(cEdit.currView.Name()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (cEdit *CardEditor) nameView(gui *Gui) (err error) {
 	w, _ := gui.Size()
 	if nameView, err := gui.SetView(cardNameView, 0, 3, w*2/3-1, 5); err != nil {
 		if err != ErrUnknownView {
@@ -48,22 +54,22 @@ func nameView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 		nameView.Editable = true
 		nameView.FgColor = ColorRed
 
-		fmt.Fprint(nameView, card.Name)
+		fmt.Fprint(nameView, cEdit.Card.Name)
 
 		utils.ErrCheck(
-			addEditorViewSwitching(gui, nameView, mngr),
-			addEditorClosing(gui, nameView, mngr),
-			addChangesSaving(gui, nameView, mngr, card),
+			addEditorViewSwitching(gui, nameView, cEdit),
+			addEditorClosing(gui, nameView, cEdit),
+			addChangesSaving(gui, nameView, cEdit),
 		)
 
-		utils.ErrCheck(mngr.SelectView(gui, cardNameView))
-		mngr.CurrBotBarKey = cardNameView
-		utils.ErrCheck(gui.DeleteView(BottomBar))
+		cEdit.Mngr.BotBar.CurrBotBarKey = cardNameView
+		cEdit.currView = nameView
+		gui.DeleteView(BottomBar) //Error intentionally ignored
 	}
 	return
 }
 
-func listInfoView(gui *Gui, mngr *TregoManager) (err error) {
+func (cEdit *CardEditor) listInfoView(gui *Gui) (err error) {
 	w, _ := gui.Size()
 	if listInfoView, err := gui.SetView(cardListInfoView, w*2/3, 3, w-1, 5); err != nil {
 		if err != ErrUnknownView {
@@ -73,12 +79,12 @@ func listInfoView(gui *Gui, mngr *TregoManager) (err error) {
 		listInfoView.Title = "Card in list:"
 		listInfoView.Editable = false
 
-		fmt.Fprint(listInfoView, yell(mngr.Lists[mngr.currListIdx].Name))
+		fmt.Fprint(listInfoView, yell(cEdit.Mngr.Lists[cEdit.Mngr.currListIdx].Name))
 	}
 	return
 }
 
-func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
+func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 	w, _ := gui.Size()
 	if view, err := gui.SetView(cardLabelsView, 0, 6, w-1, 8); err != nil {
 		if err != ErrUnknownView {
@@ -88,10 +94,10 @@ func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 		view.Title = "Labels"
 		view.Editable = true
 
-		labelsLens := make([]int, len(card.Labels))
+		labelsLens := make([]int, len(cEdit.Card.Labels))
 		var currLabel trello.Label
-		if len(card.Labels) > 0 {
-			currLabel = card.Labels[0]
+		if len(cEdit.Card.Labels) > 0 {
+			currLabel = cEdit.Card.Labels[0]
 		}
 
 		view.Editor = EditorFunc(func(v *View, key Key, ch rune, mod Modifier) {
@@ -105,7 +111,7 @@ func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 					sum += labelLen + 1
 					if sum == cx+labelLen+1 && sum < bufferLen-1 {
 						utils.ErrCheck(view.SetCursor(sum, cy))
-						currLabel = card.Labels[i+1]
+						currLabel = cEdit.Card.Labels[i+1]
 						break
 					}
 				}
@@ -120,25 +126,26 @@ func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 					sum += labelLen + 1
 					if sum == cx {
 						utils.ErrCheck(view.SetCursor(cx-labelLen-1, cy))
-						currLabel = card.Labels[i]
+						currLabel = cEdit.Card.Labels[i]
 						break
 					}
 				}
 			}
 		})
 
-		for i, label := range card.Labels {
+		for i, label := range cEdit.Card.Labels {
 			if label.Name == "" {
 				label.Name = "\u2588\u2588\u2588\u2588\u2588"
 			}
 			col, hi := utils.MapColor(label.Color)
 			fmt.Fprintf(view, "\033[3%d;%dm%v\033[0m ", col, hi, label.Name)
+			//fmt.Fprintf(view,"%v ", label.Name)
 			labelsLens[i] = utf8.RuneCountInString(label.Name)
 		}
 
 		utils.ErrCheck(
-			addEditorViewSwitching(gui, view, mngr),
-			addEditorClosing(gui, view, mngr),
+			addEditorViewSwitching(gui, view, cEdit),
+			addEditorClosing(gui, view, cEdit),
 		)
 
 		gui.SetKeybinding(cardLabelsView, 'd', ModNone, func(gui *Gui, view *View) error {
@@ -147,12 +154,12 @@ func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 			}
 			utils.ErrCheck(currLabel.DeleteLabel())
 			log.Printf("Successfully deleted label %v with color: %v", currLabel.Name, currLabel.Color)
-			for i, label := range card.Labels {
+			for i, label := range cEdit.Card.Labels {
 				if label.Id == currLabel.Id {
-					card.Labels = utils.RemoveLabel(card.Labels, i)
+					cEdit.Card.Labels = utils.RemoveLabel(cEdit.Card.Labels, i)
 					labelsLens = utils.RemoveInt(labelsLens, i)
-					if len(card.Labels) >= 2 {
-						currLabel = card.Labels[0]
+					if len(cEdit.Card.Labels) >= 2 {
+						currLabel = cEdit.Card.Labels[0]
 					} else {
 						currLabel = *new(trello.Label)
 					}
@@ -161,21 +168,42 @@ func labelsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 			}
 
 			view.Clear()
-
 			gui.DeleteKeybindings(cardLabelsView)
 			utils.ErrCheck(
 				gui.DeleteView(cardLabelsView),
-				labelsView(gui, mngr, card),
-				mngr.SelectView(gui, cardLabelsView),
+				cEdit.labelsView(gui),
 			)
+			cEdit.currView = view
 
+			return nil
+		})
+
+		gui.SetKeybinding(cardLabelsView, 'n', ModNone, func(gui *Gui, view *View) error {
+			labelChan := make(chan [2]string)
+
+			gui.SetManager(dialog.LabelDialog(gui, labelChan))
+
+			go func(gui *Gui, cEdit *CardEditor, labelChan chan [2]string) {
+				if labelArr, ok := <-labelChan; ok {
+					label, err := cEdit.Card.AddNewLabel(labelArr[0], labelArr[1])
+					utils.ErrCheck(err)
+
+					cEdit.Card.Labels = append(cEdit.Card.Labels, *label)
+					labelsLens = append(labelsLens, utf8.RuneCountInString(label.Name))
+				}
+
+				gui.Execute(func(gui *Gui) error {
+					gui.SetManager(cEdit, cEdit.Mngr.BotBar, cEdit.Mngr.TopBar)
+					return nil
+				})
+			}(gui, cEdit, labelChan)
 			return nil
 		})
 	}
 	return
 }
 
-func descriptionView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
+func (cEdit *CardEditor) descriptionView(gui *Gui) (err error) {
 	w, h := gui.Size()
 	if descriptionView, err := gui.SetView(cardDescView, 0, 9, int(w/3), h-5); err != nil {
 		if err != ErrUnknownView {
@@ -186,18 +214,18 @@ func descriptionView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error
 		descriptionView.Editable = true
 		descriptionView.Wrap = true
 
-		fmt.Fprint(descriptionView, card.Desc)
+		fmt.Fprint(descriptionView, cEdit.Card.Desc)
 
 		utils.ErrCheck(
-			addEditorViewSwitching(gui, descriptionView, mngr),
-			addEditorClosing(gui, descriptionView, mngr),
-			addChangesSaving(gui, descriptionView, mngr, card),
+			addEditorViewSwitching(gui, descriptionView, cEdit),
+			addEditorClosing(gui, descriptionView, cEdit),
+			addChangesSaving(gui, descriptionView, cEdit),
 		)
 	}
 	return
 }
 
-func commentsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
+func (cEdit *CardEditor) commentsView(gui *Gui) (err error) {
 	w, h := gui.Size()
 	if commentsView, err := gui.SetView(cardCommentsView, int(w/3)+1, 9, w-1, h-5); err != nil {
 		if err != ErrUnknownView {
@@ -208,7 +236,7 @@ func commentsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 		commentsView.Wrap = true
 		commentsView.Editable = false
 
-		actions, reqErr := card.Actions()
+		actions, reqErr := cEdit.Card.Actions()
 		utils.ErrCheck(reqErr)
 		for _, action := range actions {
 			if action.Type == trello.CommentCard {
@@ -225,26 +253,32 @@ func commentsView(gui *Gui, mngr *TregoManager, card *trello.Card) (err error) {
 		}
 
 		utils.ErrCheck(
-			addEditorViewSwitching(gui, commentsView, mngr),
-			addEditorClosing(gui, commentsView, mngr),
+			addEditorViewSwitching(gui, commentsView, cEdit),
+			addEditorClosing(gui, commentsView, cEdit),
 		)
 	}
 	return
 }
 
-func addEditorViewSwitching(gui *Gui, view *View, mngr *TregoManager) error {
+func addEditorViewSwitching(gui *Gui, view *View, cEdit *CardEditor) error {
 	return gui.SetKeybinding(view.Name(), KeyTab, ModNone, func(gui *Gui, view *View) error {
 		idx := (view.Name()[17] - 48 + 1) % 4
 		nextViewName := view.Name()[:17] + string(rune(idx+48))
-		log.Printf("switching editor view to %v", nextViewName)
-		utils.ErrCheck(mngr.SelectView(gui, nextViewName))
-		mngr.CurrBotBarKey = nextViewName
-		utils.ErrCheck(gui.DeleteView(BottomBar))
+
+		//log.Printf("switching editor view to %v", nextViewName)
+
+		nextView, err := gui.View(nextViewName)
+		utils.ErrCheck(err)
+		cEdit.currView = nextView
+
+		cEdit.Mngr.BotBar.CurrBotBarKey = nextViewName
+
+		gui.DeleteView(BottomBar)
 		return nil
 	})
 }
 
-func addEditorClosing(gui *Gui, view *View, mngr *TregoManager) error {
+func addEditorClosing(gui *Gui, view *View, cEdit *CardEditor) error {
 	return gui.SetKeybinding(view.Name(), KeyCtrlQ, ModNone, func(gui *Gui, view *View) error {
 		gui.DeleteKeybindings(cardNameView)
 		gui.DeleteKeybindings(cardListInfoView)
@@ -258,21 +292,21 @@ func addEditorClosing(gui *Gui, view *View, mngr *TregoManager) error {
 			gui.DeleteView(cardDescView),
 			gui.DeleteView(cardCommentsView),
 		)
-		mngr.Mode = BoardView
-		mngr.currView = nil
-		mngr.CurrBotBarKey = mngr.DefaultBotBarKey
-		utils.ErrCheck(gui.DeleteView(BottomBar))
+
+		cEdit.Mngr.BotBar.CurrBotBarKey = cEdit.Mngr.BotBar.DefaultBotBarKey
+		gui.SetManager(cEdit.Mngr, cEdit.Mngr.BotBar, cEdit.Mngr.TopBar)
+		SetKeyBindings(gui, cEdit.Mngr)
 		return nil
 	})
 }
 
-func addChangesSaving(gui *Gui, view *View, mngr *TregoManager, card *trello.Card) error {
+func addChangesSaving(gui *Gui, view *View, cEdit *CardEditor) error {
 	return gui.SetKeybinding(view.Name(), KeyCtrlS, ModNone, func(gui *Gui, view *View) (err error) {
 		switch view.Name() {
 		case cardNameView:
-			_, err = card.SetName(view.Buffer()[:len(view.Buffer())-1])
+			_, err = cEdit.Card.SetName(view.Buffer()[:len(view.Buffer())-1])
 		case cardDescView:
-			_, err = card.SetDescription(view.Buffer())
+			_, err = cEdit.Card.SetDescription(view.Buffer())
 		default:
 			//Unsupported view
 		}

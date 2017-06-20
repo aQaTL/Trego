@@ -19,7 +19,7 @@ func ConfirmDialog(msg, title string, gui *gocui.Gui, choice chan bool) (view *g
 
 	utils.ErrCheck(gui.SetKeybinding(confirmDialog, 'y', gocui.ModNone,
 		func(gui *gocui.Gui, view *gocui.View) (err error) {
-			dialogCleanUp(gui, confirmDialog)
+			cleanUp(gui, confirmDialog)
 			choice <- true
 			close(choice)
 			return
@@ -27,7 +27,7 @@ func ConfirmDialog(msg, title string, gui *gocui.Gui, choice chan bool) (view *g
 
 	utils.ErrCheck(gui.SetKeybinding(confirmDialog, 'n', gocui.ModNone,
 		func(gui *gocui.Gui, view *gocui.View) (err error) {
-			dialogCleanUp(gui, confirmDialog)
+			cleanUp(gui, confirmDialog)
 			choice <- false
 			close(choice)
 			return
@@ -40,7 +40,7 @@ func ConfirmDialog(msg, title string, gui *gocui.Gui, choice chan bool) (view *g
 			gocui.ModNone,
 			func(gui *gocui.Gui, view *gocui.View) error {
 				close(choice)
-				dialogCleanUp(gui, confirmDialog)
+				cleanUp(gui, confirmDialog)
 				return nil
 			}))
 
