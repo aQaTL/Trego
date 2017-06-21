@@ -36,6 +36,7 @@ func (cEdit *CardEditor) Layout(gui *Gui) error {
 		cEdit.commentsView(gui),
 	)
 	if _, err := gui.SetCurrentView(cEdit.currView.Name()); err != nil {
+		log.Printf("Error with %v view: %v", cEdit.currView.Name(), err)
 		return err
 	}
 	return nil
@@ -139,7 +140,6 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 			}
 			col, hi := utils.MapColor(label.Color)
 			fmt.Fprintf(view, "\033[3%d;%dm%v\033[0m ", col, hi, label.Name)
-			//fmt.Fprintf(view,"%v ", label.Name)
 			labelsLens[i] = utf8.RuneCountInString(label.Name)
 		}
 
@@ -197,6 +197,33 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 					return nil
 				})
 			}(gui, cEdit, labelChan)
+			return nil
+		})
+
+		gui.SetKeybinding(cardLabelsView, 'r', ModNone, func(gui *Gui, view *View) error {
+			inputChan := make(chan string)
+
+			inputDialogViews := dialog.InputDialog(
+				"Rename \""+currLabel.Name+"\"",
+				"Rename",
+				"",
+				gui,
+				inputChan,
+			)
+			cEdit.currView = inputDialogViews[0]
+
+			go func(gui *Gui, inputChan <-chan string) {
+				if newName, ok := <-inputChan; ok {
+					utils.ErrCheck(currLabel.UpdateName(newName))
+				}
+
+				gui.Execute(func(gui *Gui) error {
+					cEdit.currView = view
+					dialog.DeleteDialog(gui, inputDialogViews[:]...)
+					return nil
+				})
+			}(gui, inputChan)
+
 			return nil
 		})
 	}

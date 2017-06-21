@@ -412,14 +412,18 @@ func addCardAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 		cardNameC := make(chan string)
 		utils.DelNonGlobalKeyBinds(gui)
 
+		inputDialog := dialog.InputDialog(
+			"Name your card",
+			"New card",
+			"",
+			gui,
+			cardNameC,
+		)
+
 		utils.ErrCheck(mngr.SelectView(
 			gui,
-			dialog.InputDialog(
-				"Name your card",
-				"New card",
-				"",
-				gui,
-				cardNameC).Name()))
+			inputDialog[0].Name(),
+		))
 
 		go func() {
 			if cardName, ok := <-cardNameC; ok {
@@ -440,6 +444,7 @@ func addCardAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 
 				gui.Execute(func(gui *Gui) error {
 					utils.ErrCheck(gui.DeleteView(list.Id)) //Forces view update
+					dialog.DeleteDialog(gui, inputDialog[:]...)
 					return nil
 				})
 			}
@@ -454,14 +459,17 @@ func addListAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 		viewNameC := make(chan string)
 		utils.DelNonGlobalKeyBinds(gui)
 
+		inputDialog := dialog.InputDialog(
+			"Name your list",
+			"New list",
+			"",
+			gui,
+			viewNameC,
+		)
 		utils.ErrCheck(mngr.SelectView(
 			gui,
-			dialog.InputDialog(
-				"Name your list",
-				"New list",
-				"",
-				gui,
-				viewNameC).Name()))
+			inputDialog[0].Name(),
+		))
 
 		go func() {
 			if viewName, ok := <-viewNameC; ok {
@@ -479,6 +487,7 @@ func addListAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 					utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1, mngr.listViewOffset))
 					mngr.SelectView(gui, list.Id)
 					mngr.currListIdx = len(mngr.Lists) - 1
+					dialog.DeleteDialog(gui, inputDialog[:]...)
 					return nil
 				})
 			}

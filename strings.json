@@ -38,7 +38,8 @@
 				"d", "delete label"
 			],
 			[
-				"^q", "quit"
+				"^q", "quit",
+				"r", "rename label"
 
 			]
 		],
