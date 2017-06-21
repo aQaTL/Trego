@@ -96,9 +96,9 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 		view.Editable = true
 
 		labelsLens := make([]int, len(cEdit.Card.Labels))
-		var currLabel trello.Label
+		var currLabel *trello.Label
 		if len(cEdit.Card.Labels) > 0 {
-			currLabel = cEdit.Card.Labels[0]
+			currLabel = &cEdit.Card.Labels[0]
 		}
 
 		view.Editor = EditorFunc(func(v *View, key Key, ch rune, mod Modifier) {
@@ -112,7 +112,7 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 					sum += labelLen + 1
 					if sum == cx+labelLen+1 && sum < bufferLen-1 {
 						utils.ErrCheck(view.SetCursor(sum, cy))
-						currLabel = cEdit.Card.Labels[i+1]
+						currLabel = &cEdit.Card.Labels[i+1]
 						break
 					}
 				}
@@ -127,7 +127,7 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 					sum += labelLen + 1
 					if sum == cx {
 						utils.ErrCheck(view.SetCursor(cx-labelLen-1, cy))
-						currLabel = cEdit.Card.Labels[i]
+						currLabel = &cEdit.Card.Labels[i]
 						break
 					}
 				}
@@ -149,7 +149,7 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 		)
 
 		gui.SetKeybinding(cardLabelsView, 'd', ModNone, func(gui *Gui, view *View) error {
-			if currLabel == *new(trello.Label) {
+			if *currLabel == *new(trello.Label) {
 				return nil
 			}
 			utils.ErrCheck(currLabel.DeleteLabel())
@@ -159,9 +159,9 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 					cEdit.Card.Labels = utils.RemoveLabel(cEdit.Card.Labels, i)
 					labelsLens = utils.RemoveInt(labelsLens, i)
 					if len(cEdit.Card.Labels) >= 2 {
-						currLabel = cEdit.Card.Labels[0]
+						currLabel = &cEdit.Card.Labels[0]
 					} else {
-						currLabel = *new(trello.Label)
+						currLabel = new(trello.Label)
 					}
 					break
 				}
@@ -220,6 +220,7 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 				gui.Execute(func(gui *Gui) error {
 					cEdit.currView = view
 					dialog.DeleteDialog(gui, inputDialogViews[:]...)
+					utils.ErrCheck(gui.DeleteView(cardLabelsView))
 					return nil
 				})
 			}(gui, inputChan)
@@ -312,13 +313,12 @@ func addEditorClosing(gui *Gui, view *View, cEdit *CardEditor) error {
 		gui.DeleteKeybindings(cardLabelsView)
 		gui.DeleteKeybindings(cardDescView)
 		gui.DeleteKeybindings(cardCommentsView)
-		utils.ErrCheck(
-			gui.DeleteView(cardNameView),
-			gui.DeleteView(cardListInfoView),
-			gui.DeleteView(cardLabelsView),
-			gui.DeleteView(cardDescView),
-			gui.DeleteView(cardCommentsView),
-		)
+
+		gui.DeleteView(cardNameView)
+		gui.DeleteView(cardListInfoView)
+		gui.DeleteView(cardLabelsView)
+		gui.DeleteView(cardDescView)
+		gui.DeleteView(cardCommentsView)
 
 		cEdit.Mngr.BotBar.CurrBotBarKey = cEdit.Mngr.BotBar.DefaultBotBarKey
 		gui.SetManager(cEdit.Mngr, cEdit.Mngr.BotBar, cEdit.Mngr.TopBar)
