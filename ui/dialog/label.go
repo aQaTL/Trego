@@ -28,11 +28,19 @@ func (mngr *labelDialogMngr) Layout(gui *gocui.Gui) error {
 	utils.ErrCheck(err)
 	mngr.colorView = colorView
 
-	for i, col := range utils.FgColors {
-		fmt.Fprintf(colorView, "%d.%v\n", i, col)
+	i := 0
+	for _, col := range utils.FgColors {
+		if col != "-" {
+			fmt.Fprintf(colorView, "%d.%v\n", i, col)
+			i++
+		}
 	}
-	for i, col := range utils.HiFgColors {
-		fmt.Fprintf(colorView, "%d.%v\n", i+len(utils.FgColors), col)
+	i = 0
+	for _, col := range utils.HiFgColors {
+		if col != "-" {
+			fmt.Fprintf(colorView, "%d.%v\n", i+len(utils.FgColors), col)
+			i++
+		}
 	}
 
 	mngr.once.Do(mngr.configDialog)
@@ -54,13 +62,11 @@ func (mngr *labelDialogMngr) configDialog() {
 		mngr.gui.SetKeybinding(labelColor, gocui.KeyTab, gocui.ModNone, switchViewFunc),
 	)
 
-	closeFunc := func(gui *gocui.Gui, v *gocui.View) error {
-		err := closeLabelDialog(gui, mngr.titleView, mngr.colorView, mngr.labelChan)
-		return err
-	}
 	utils.ErrCheck(
-		mngr.gui.SetKeybinding(labelTitle, gocui.KeyEnter, gocui.ModNone, closeFunc),
-		mngr.gui.SetKeybinding(labelColor, gocui.KeyEnter, gocui.ModNone, closeFunc),
+		mngr.gui.SetKeybinding(labelTitle, gocui.KeyEnter, gocui.ModNone, mngr.commitLabelDialog),
+		mngr.gui.SetKeybinding(labelColor, gocui.KeyEnter, gocui.ModNone, mngr.commitLabelDialog),
+		mngr.gui.SetKeybinding(labelTitle, gocui.KeyCtrlQ, gocui.ModNone, mngr.closeLabelDialog),
+		mngr.gui.SetKeybinding(labelColor, gocui.KeyCtrlQ, gocui.ModNone, mngr.closeLabelDialog),
 	)
 
 	utils.ErrCheck(
@@ -83,12 +89,19 @@ func LabelDialog(gui *gocui.Gui, labelChan chan [2]string) gocui.Manager {
 	return mngr
 }
 
-func closeLabelDialog(gui *gocui.Gui, titleView, colorView *gocui.View, labelChan chan [2] string) error {
+func (mngr *labelDialogMngr) closeLabelDialog(gui *gocui.Gui, view *gocui.View) error {
+	DeleteDialog(gui, mngr.titleView, mngr.colorView)
+	close(mngr.labelChan)
+
+	return nil
+}
+
+func (mngr *labelDialogMngr) commitLabelDialog(gui *gocui.Gui, view *gocui.View) error {
 	gui.DeleteKeybindings(labelTitle)
 	gui.DeleteKeybindings(labelColor)
 
-	title := strings.Trim(titleView.Buffer(), "\n ")
-	colorIdx := utils.SelectedItemIdx(colorView)
+	title := strings.Trim(mngr.titleView.Buffer(), "\n ")
+	colorIdx := utils.SelectedItemIdx(mngr.colorView)
 	color := ""
 	if colorIdx < 8 {
 		color = utils.FgColors[colorIdx]
@@ -101,6 +114,7 @@ func closeLabelDialog(gui *gocui.Gui, titleView, colorView *gocui.View, labelCha
 		gui.DeleteView(labelColor),
 	)
 
-	labelChan <- [2]string{title, color}
+	mngr.labelChan <- [2]string{title, color}
+	close(mngr.labelChan)
 	return nil
 }

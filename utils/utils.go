@@ -29,11 +29,11 @@ func RemoveInt(slice []int, idx int) []int {
 }
 
 var FgColors = [8]string{
-	"null", "red", "green", "brown", "dark blue", "purple", "cyan", "",
+	"-", "red", "green", "-", "-", "purple", "-", "-",
 }
 
 var HiFgColors = [8]string{
-	"black", "orange", "lime", "yellow", "blue", "pink", "sky", "white",
+	"black", "orange", "lime", "yellow", "blue", "pink", "sky", "",
 }
 
 func MapColor(colorStr string) (color, hi int) {
