@@ -84,6 +84,16 @@ func cleanUp(gui *gocui.Gui, dialogTypes ...string) {
 	}
 }
 
+func DeleteDialog(gui *gocui.Gui, dialogViews ...*gocui.View) error {
+	for _, view := range dialogViews {
+		gui.DeleteKeybindings(view.Name())
+		if err := gui.DeleteView(view.Name()); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func printCentered(w io.Writer, text string, viewWidth int) {
 	msgL := len(text)
 	if msgL < viewWidth {

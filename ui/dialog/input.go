@@ -8,7 +8,7 @@ import (
 )
 
 //Provides dialog with an input field
-func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string) *gocui.View {
+func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string) [2]*gocui.View {
 	msgL := len(msg)
 	x1, y1, x2, y2 := calcDialogBounds(msgL, gui)
 
@@ -28,7 +28,6 @@ func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string
 			gocui.KeyEnter,
 			gocui.ModNone,
 			func(gui *gocui.Gui, view *gocui.View) error {
-				cleanUp(gui, inputDialog, inputField)
 				input <- strings.TrimSuffix(inputView.Buffer(), " \n")
 				close(input)
 				return nil
@@ -41,9 +40,8 @@ func InputDialog(msg, title, initValue string, gui *gocui.Gui, input chan string
 			gocui.ModNone,
 			func(gui *gocui.Gui, view *gocui.View) error {
 				close(input)
-				cleanUp(gui, inputDialog, inputField)
 				return nil
 			}))
 
-	return inputView
+	return [2]*gocui.View{inputView, dialogView}
 }
