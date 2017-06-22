@@ -154,6 +154,7 @@ func addDeleting(gui *Gui, listName string, mngr *TregoManager) error {
 
 			gui.Execute(func(gui *Gui) error {
 				utils.ErrCheck(gui.DeleteView(currList.Id))
+				dialog.DeleteDialog(gui, mngr.currView)
 				return nil
 			})
 			SetKeyBindings(gui, mngr)
@@ -298,6 +299,7 @@ func addCardToListMoving(gui *Gui, listName string, mngr *TregoManager) error {
 					utils.ErrCheck(
 						gui.DeleteView(mngr.Lists[listIdx].Id),
 						gui.DeleteView(mngr.Lists[mngr.currListIdx].Id)) //Forces view update
+					dialog.DeleteDialog(gui, mngr.currView)
 					return nil
 				})
 			}
@@ -505,7 +507,7 @@ func addCardEditing(gui *Gui, listName string, mngr *TregoManager) error {
 		gui.SetManager(
 			&CardEditor{
 				Mngr: mngr,
-				Card: cards[SelectedItemIdx(view)],
+				Card: &cards[SelectedItemIdx(view)],
 			},
 			mngr.BotBar,
 			mngr.TopBar,
@@ -545,6 +547,8 @@ func addBoardSwitching(gui *Gui, listName string, mngr *TregoManager) error {
 					utils.ErrCheck(gui.DeleteView(list.Id))
 				}
 				gui.Execute(func(gui *Gui) error {
+					dialog.DeleteDialog(gui, mngr.currView)
+
 					utils.ErrCheck(gui.DeleteView(TopBar))
 					mngr.Lists = conn.Lists(mngr.CurrBoard)
 					mngr.currListIdx = 0
