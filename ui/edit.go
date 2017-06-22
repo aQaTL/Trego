@@ -22,7 +22,7 @@ const (
 
 type CardEditor struct {
 	Mngr *TregoManager
-	Card trello.Card
+	Card *trello.Card
 
 	currView *View
 }
@@ -96,12 +96,13 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 		view.Editable = true
 
 		labelsLens := make([]int, len(cEdit.Card.Labels))
+
 		var currLabel *trello.Label
 		if len(cEdit.Card.Labels) > 0 {
 			currLabel = &cEdit.Card.Labels[0]
 		}
 
-		view.Editor = EditorFunc(func(v *View, key Key, ch rune, mod Modifier) {
+		view.Editor = EditorFunc(func(view *View, key Key, ch rune, mod Modifier) {
 			switch key {
 			case KeyArrowRight:
 				cx, cy := view.Cursor()
@@ -224,6 +225,47 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 					return nil
 				})
 			}(gui, inputChan)
+
+			return nil
+		})
+
+		gui.SetKeybinding(cardLabelsView, 'a', ModNone, func(gui *Gui, view *View) error {
+			labels, err := cEdit.Mngr.CurrBoard.Labels()
+			utils.ErrCheck(err)
+
+			selIdxChan := make(chan int)
+			values := make([]string, len(labels))
+
+			for i, label := range labels {
+				if label.Name == "" {
+					label.Name = "\u2588\u2588\u2588\u2588\u2588"
+				}
+				col, hi := utils.MapColor(label.Color)
+				values[i] = fmt.Sprintf("\033[3%d;%dm%v\033[0m", col, hi, label.Name)
+			}
+
+			selectDialog := dialog.SelectDialog(
+				"Select label",
+				gui,
+				selIdxChan,
+				values,
+			)
+			cEdit.currView = selectDialog
+
+			go func(selIdxChan chan int, selectDialog *View) {
+				if idx, ok := <-selIdxChan; ok {
+					_, err := cEdit.Card.AddLabel(labels[idx].Id)
+					utils.ErrCheck(err)
+					cEdit.Card.Labels = append(cEdit.Card.Labels, labels[idx])
+				}
+
+				gui.Execute(func(gui *Gui) error {
+					cEdit.currView = view
+					dialog.DeleteDialog(gui, selectDialog)
+					utils.ErrCheck(gui.DeleteView(cardLabelsView))
+					return nil
+				})
+			}(selIdxChan, selectDialog)
 
 			return nil
 		})
