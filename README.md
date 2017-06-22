@@ -2,6 +2,12 @@
 
 Simple Trello console client (but with UI). 
 
+### Screenshots
+
+![trego](https://user-images.githubusercontent.com/17130832/27430489-1401f12e-5749-11e7-8dc3-c7749d561c33.png)
+
+![trego2](https://user-images.githubusercontent.com/17130832/27430490-1402c0f4-5749-11e7-9007-140e3af8fed8.png)
+
 ### Building
 
 I haven't published any binaries yet, so if you want to try Trego on your computer, you'll have to 
