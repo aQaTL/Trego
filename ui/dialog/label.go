@@ -31,14 +31,13 @@ func (mngr *labelDialogMngr) Layout(gui *gocui.Gui) error {
 	i := 0
 	for _, col := range utils.FgColors {
 		if col != "-" {
-			fmt.Fprintf(colorView, "%d.%v\n", i, col)
+			fmt.Fprintf(mngr.colorView, "%d.%v\n", i, col)
 			i++
 		}
 	}
-	i = 0
 	for _, col := range utils.HiFgColors {
 		if col != "-" {
-			fmt.Fprintf(colorView, "%d.%v\n", i+len(utils.FgColors), col)
+			fmt.Fprintf(mngr.colorView, "%d.%v\n", i, col)
 			i++
 		}
 	}
@@ -103,7 +102,7 @@ func (mngr *labelDialogMngr) commitLabelDialog(gui *gocui.Gui, view *gocui.View)
 	title := strings.Trim(mngr.titleView.Buffer(), "\n ")
 
 	colorIdx := utils.SelectedItemIdx(mngr.colorView)
-	color, err := view.Line(colorIdx)
+	color, err := mngr.colorView.Line(colorIdx)
 	if err != nil { //Pressed enter before selecting color
 		return mngr.closeLabelDialog(gui, view)
 	}
