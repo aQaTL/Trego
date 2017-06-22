@@ -101,13 +101,13 @@ func (mngr *labelDialogMngr) commitLabelDialog(gui *gocui.Gui, view *gocui.View)
 	gui.DeleteKeybindings(labelColor)
 
 	title := strings.Trim(mngr.titleView.Buffer(), "\n ")
+
 	colorIdx := utils.SelectedItemIdx(mngr.colorView)
-	color := ""
-	if colorIdx < 8 {
-		color = utils.FgColors[colorIdx]
-	} else {
-		color = utils.HiFgColors[colorIdx-8]
+	color, err := view.Line(colorIdx)
+	if err != nil { //Pressed enter before selecting color
+		return mngr.closeLabelDialog(gui, view)
 	}
+	color = color[2:]
 
 	utils.ErrCheck(
 		gui.DeleteView(labelTitle),
