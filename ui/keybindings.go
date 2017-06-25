@@ -428,8 +428,8 @@ func addCardAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 		))
 
 		go func() {
+			list := mngr.Lists[mngr.currListIdx]
 			if cardName, ok := <-cardNameC; ok {
-				list := mngr.Lists[mngr.currListIdx]
 				card, err := list.AddCard(trello.Card{
 					IdList: list.Id,
 					Name:   cardName,
@@ -443,13 +443,13 @@ func addCardAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 				cards, err := list.Cards()
 				utils.ErrCheck(err)
 				cards = append(cards, *card)
-
-				gui.Execute(func(gui *Gui) error {
-					utils.ErrCheck(gui.DeleteView(list.Id)) //Forces view update
-					dialog.DeleteDialog(gui, inputDialog[:]...)
-					return nil
-				})
 			}
+
+			gui.Execute(func(gui *Gui) error {
+				utils.ErrCheck(gui.DeleteView(list.Id)) //Forces view update
+				dialog.DeleteDialog(gui, inputDialog[:]...)
+				return nil
+			})
 			SetKeyBindings(gui, mngr)
 		}()
 		return nil

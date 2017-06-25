@@ -71,7 +71,7 @@ func calcDialogBounds(msgL int, gui *gocui.Gui) (x1, y1, x2, y2 int) {
 	w, h := float64(wi), float64(hi)
 	x1 = int(w / 2.0 * 0.7)
 	x2 = int(w / 2 * 1.3)
-	y1 = int(h / 2 * 0.8)
+	y1 = int(h / 2 * 0.6)
 	y2 = int(float64(y1)+math.Ceil(float64(msgL)/float64(x2-x1))) + 1
 
 	return
