@@ -182,7 +182,8 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 		gui.SetKeybinding(cardLabelsView, 'n', ModNone, func(gui *Gui, view *View) error {
 			labelChan := make(chan [2]string)
 
-			gui.SetManager(dialog.LabelDialog(gui, labelChan))
+			gui.SetManager(dialog.LabelDialog(gui, labelChan), cEdit.Mngr.BotBar, cEdit.Mngr.TopBar)
+			cEdit.Mngr.BotBar.CurrBotBarKey = "label_dialog"
 
 			go func(gui *Gui, cEdit *CardEditor, labelChan chan [2]string) {
 				if labelArr, ok := <-labelChan; ok {

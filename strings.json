@@ -59,6 +59,15 @@
 			[
 
 			]
+		],
+		"label_dialog": [
+			[
+				"^q", "quit",
+				"enter", "apply"
+			],
+			[
+				"tab", "next view"
+			]
 		]
 	}
 }
