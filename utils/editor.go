@@ -34,13 +34,13 @@ func CursorDown(g *Gui, v *View) (err error) {
 	if v != nil {
 		cx, cy := v.Cursor()
 		ox, oy := v.Origin()
-		viewBuffer := strings.Split(v.ViewBuffer(), "\n")
-		if cy+oy < (len(viewBuffer) - 3) {
+		viewBuffer := strings.Split(strings.Trim(v.ViewBuffer(), "\n "), "\n")
+		if cy+oy < len(viewBuffer)-1 {
 			if err = v.SetCursor(cx, cy+1); err != nil {
 				err = v.SetOrigin(ox, oy+1)
 			}
 		}
-		if len(viewBuffer) > 0 {
+		if len(viewBuffer) > 0 && cy < len(viewBuffer)-2 {
 			line := viewBuffer[cy+1]
 			if cy+1 != len(viewBuffer) && len(line) > 0 && (line[0] < 0x30 || line[0] > 0x39) {
 				return CursorDown(g, v)

@@ -8,7 +8,11 @@ import (
 
 func SelectDialog(title string, gui *gocui.Gui, selIdxC chan int, values []string) *gocui.View {
 	x1, y1, x2, y2 := calcDialogBounds(0, gui)
+	_, h := gui.Size()
 	y2 += len(values)
+	if y2 >= h {
+		y2 = y2 - (y2 % h) - 1
+	}
 
 	dialogView, err := setUpDialogView(gui, selectDialog, title, x1, y1, x2, y2)
 	utils.ErrCheck(err)
