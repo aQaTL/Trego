@@ -28,6 +28,12 @@ func (mngr *labelDialogMngr) Layout(gui *gocui.Gui) error {
 	utils.ErrCheck(err)
 	mngr.colorView = colorView
 
+	mngr.once.Do(mngr.configDialog)
+
+	return nil
+}
+
+func (mngr *labelDialogMngr) configDialog() {
 	i := 0
 	for _, col := range utils.FgColors {
 		if col != "-" {
@@ -42,12 +48,6 @@ func (mngr *labelDialogMngr) Layout(gui *gocui.Gui) error {
 		}
 	}
 
-	mngr.once.Do(mngr.configDialog)
-
-	return nil
-}
-
-func (mngr *labelDialogMngr) configDialog() {
 	switchViewFunc := func(gui *gocui.Gui, view *gocui.View) (err error) {
 		if gui.CurrentView().Name() == labelTitle {
 			_, err = gui.SetCurrentView(labelColor)
@@ -106,7 +106,7 @@ func (mngr *labelDialogMngr) commitLabelDialog(gui *gocui.Gui, view *gocui.View)
 	if err != nil { //Pressed enter before selecting color
 		return mngr.closeLabelDialog(gui, view)
 	}
-	color = color[2:]
+	color = color[strings.IndexRune(color, '.')+1:]
 
 	utils.ErrCheck(
 		gui.DeleteView(labelTitle),
