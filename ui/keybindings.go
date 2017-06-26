@@ -502,7 +502,7 @@ func addListAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 
 func addCardEditing(gui *Gui, listName string, mngr *TregoManager) error {
 	return gui.SetKeybinding(listName, KeyEnter, ModNone, func(gui *Gui, view *View) error {
-		cards, err := mngr.Lists[mngr.currListIdx].Cards()
+		cards, err := mngr.Lists[mngr.currListIdx].FreshCards()
 		utils.ErrCheck(err)
 		gui.SetManager(
 			&CardEditor{
