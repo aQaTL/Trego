@@ -4,7 +4,6 @@ import (
 	. "github.com/jroimartin/gocui"
 	"strings"
 	"strconv"
-	"github.com/aqatl/KogoKolejka/utils"
 )
 
 func DelNonGlobalKeyBinds(gui *Gui) {
@@ -22,6 +21,6 @@ func SelectedItemIdx(view *View) int {
 	currLine, err := view.Line(cy)
 	dotIdx := strings.Index(currLine, ".")
 	itemIdx64, err := strconv.ParseInt(currLine[:dotIdx], 10, 32)
-	utils.ErrCheck(err)
+	ErrCheck(err)
 	return int(itemIdx64)
 }
