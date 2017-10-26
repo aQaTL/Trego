@@ -194,7 +194,7 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 					labelsLens = append(labelsLens, utf8.RuneCountInString(label.Name))
 				}
 
-				gui.Execute(func(gui *Gui) error {
+				gui.Update(func(gui *Gui) error {
 					gui.SetManager(cEdit, cEdit.Mngr.BotBar, cEdit.Mngr.TopBar)
 					return nil
 				})
@@ -219,7 +219,7 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 					utils.ErrCheck(currLabel.UpdateName(newName))
 				}
 
-				gui.Execute(func(gui *Gui) error {
+				gui.Update(func(gui *Gui) error {
 					cEdit.currView = view
 					dialog.DeleteDialog(gui, inputDialogViews[:]...)
 					utils.ErrCheck(gui.DeleteView(cardLabelsView))
@@ -260,7 +260,7 @@ func (cEdit *CardEditor) labelsView(gui *Gui) (err error) {
 					cEdit.Card.Labels = append(cEdit.Card.Labels, labels[idx])
 				}
 
-				gui.Execute(func(gui *Gui) error {
+				gui.Update(func(gui *Gui) error {
 					cEdit.currView = view
 					dialog.DeleteDialog(gui, selectDialog)
 					utils.ErrCheck(gui.DeleteView(cardLabelsView))

@@ -152,7 +152,7 @@ func addDeleting(gui *Gui, listName string, mngr *TregoManager) error {
 				}
 			}
 
-			gui.Execute(func(gui *Gui) error {
+			gui.Update(func(gui *Gui) error {
 				utils.ErrCheck(gui.DeleteView(currList.Id))
 				dialog.DeleteDialog(gui, mngr.currView)
 				return nil
@@ -295,7 +295,7 @@ func addCardToListMoving(gui *Gui, listName string, mngr *TregoManager) error {
 				utils.ErrCheck(err)
 
 				log.Printf("Card %v moved to list: %v", movedCard.Name, mngr.Lists[listIdx].Name)
-				gui.Execute(func(gui *Gui) error {
+				gui.Update(func(gui *Gui) error {
 					utils.ErrCheck(
 						gui.DeleteView(mngr.Lists[listIdx].Id),
 						gui.DeleteView(mngr.Lists[mngr.currListIdx].Id)) //Forces view update
@@ -445,7 +445,7 @@ func addCardAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 				cards = append(cards, *card)
 			}
 
-			gui.Execute(func(gui *Gui) error {
+			gui.Update(func(gui *Gui) error {
 				utils.ErrCheck(gui.DeleteView(list.Id)) //Forces view update
 				dialog.DeleteDialog(gui, inputDialog[:]...)
 				return nil
@@ -485,7 +485,7 @@ func addListAdding(gui *Gui, viewName string, mngr *TregoManager) error {
 				}
 
 				mngr.Lists = append(mngr.Lists, *list)
-				gui.Execute(func(gui *Gui) error {
+				gui.Update(func(gui *Gui) error {
 					utils.ErrCheck(AddList(gui, *list, len(mngr.Lists)-1, mngr.listViewOffset))
 					mngr.SelectView(gui, list.Id)
 					mngr.currListIdx = len(mngr.Lists) - 1
@@ -546,7 +546,7 @@ func addBoardSwitching(gui *Gui, listName string, mngr *TregoManager) error {
 				for _, list := range mngr.Lists {
 					utils.ErrCheck(gui.DeleteView(list.Id))
 				}
-				gui.Execute(func(gui *Gui) error {
+				gui.Update(func(gui *Gui) error {
 					dialog.DeleteDialog(gui, mngr.currView)
 
 					utils.ErrCheck(gui.DeleteView(TopBar))
