@@ -10,13 +10,15 @@ Simple Trello console client (but with UI).
 
 ### Building
 
-I haven't published any binaries yet, so if you want to try Trego on your computer, you'll have to 
-perform following steps:
+You can find built binaries for GNU/Linux, Windows and MacOS in the 
+[releases](https://github.com/aQaTL/Trego/releases) tab.
+
+If you want to built the app by yourself, perform steps listed below: 
 
 * Download and install [golang](https://golang.org/dl/)
-* Add `GOPATH` environment variable (set it to the folder, where you want to store `go` 
+* Set the `GOPATH` environment variable (set it to the folder, where you want to store `go` 
 projects)
-* Download Trego via `go get github.com/aqatl/trego` (needs [git](https://git-scm.com/) 
+* Download Trego via `go get -u github.com/aqatl/trego` (needs [git](https://git-scm.com/) 
 installed)
 * Create [token.json](#token.json) file
 
